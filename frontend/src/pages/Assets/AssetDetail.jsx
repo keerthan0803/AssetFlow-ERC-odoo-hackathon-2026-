@@ -43,7 +43,7 @@ export default function AssetDetail() {
   return (
     <div className="flex min-h-screen bg-[#FBFBFC] font-sans antialiased text-slate-800">
       <Sidebar />
-
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Reusable Header */}
         <Header showSearch={false} title={`Asset Details: ${assetId}`} />
 

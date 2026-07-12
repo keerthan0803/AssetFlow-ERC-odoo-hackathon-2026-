@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { label: 'Audit & Compliance',     path: '/audit',                    icon: 'fact_check' },
   { label: 'Reports & Analytics',    path: '/reports',                  icon: 'assessment' },
   { label: 'Notifications',         path: '/notifications',            icon: 'notifications' },
+  { label: 'System Settings',       path: '/settings',                 icon: 'settings' },
 ];
 
 export default function Sidebar() {

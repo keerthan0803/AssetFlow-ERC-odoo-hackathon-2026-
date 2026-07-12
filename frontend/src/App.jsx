@@ -18,6 +18,7 @@ import Allocation from './pages/Allocation/Allocation';
 import Reports from './pages/Reports/Reports';
 import Notifications from './pages/Notifications/Notifications';
 import Profile from './pages/Profile/Profile';
+import Settings from './pages/Settings/Settings';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -74,6 +75,9 @@ export default function App() {
 
         {/* User Profile */}
         <Route path="/profile" element={<Profile />} />
+
+        {/* System Settings */}
+        <Route path="/settings" element={<Settings />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -129,7 +129,7 @@ export default function Header({ title, showSearch = true, searchQuery = "", set
         </div>
 
         <button 
-          onClick={() => navigate('/profile')}
+          onClick={() => navigate('/settings')}
           className="text-[#404946] hover:text-[#00352d] transition-colors cursor-pointer p-1.5 rounded-full hover:bg-slate-100 flex items-center justify-center"
           title="Settings & Preferences"
         >
