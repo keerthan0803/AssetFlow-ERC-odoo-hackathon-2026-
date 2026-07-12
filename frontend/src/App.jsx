@@ -23,6 +23,7 @@ import Settings from './pages/Settings/Settings';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
+import RequireAuth from './components/RequireAuth';
 
 export default function App() {
   return (
@@ -47,39 +48,42 @@ export default function App() {
           <Route path="/verify-otp" element={<OtpVerification />} />
         </Route>
 
-        {/* Dashboard */}
-        <Route path="/" element={<Dashboard />} />
+        {/* Protected Routes */}
+        <Route element={<RequireAuth />}>
+          {/* Dashboard */}
+          <Route path="/" element={<Dashboard />} />
 
-        {/* Assets */}
-        <Route path="/assets" element={<AssetList />} />
-        <Route path="/assets/:id" element={<AssetDetail />} />
+          {/* Assets */}
+          <Route path="/assets" element={<AssetList />} />
+          <Route path="/assets/:id" element={<AssetDetail />} />
 
-        {/* Organization */}
-        <Route path="/organization/departments" element={<Departments />} />
+          {/* Organization */}
+          <Route path="/organization/departments" element={<Departments />} />
 
-        {/* Allocation & Transfer */}
-        <Route path="/allocation" element={<Allocation />} />
+          {/* Allocation & Transfer */}
+          <Route path="/allocation" element={<Allocation />} />
 
-        {/* Resource Booking */}
-        <Route path="/booking" element={<Booking />} />
+          {/* Resource Booking */}
+          <Route path="/booking" element={<Booking />} />
 
-        {/* Maintenance */}
-        <Route path="/maintenance" element={<Maintenance />} />
+          {/* Maintenance */}
+          <Route path="/maintenance" element={<Maintenance />} />
 
-        {/* Audit & Compliance */}
-        <Route path="/audit" element={<Audit />} />
+          {/* Audit & Compliance */}
+          <Route path="/audit" element={<Audit />} />
 
-        {/* Reports */}
-        <Route path="/reports" element={<Reports />} />
+          {/* Reports */}
+          <Route path="/reports" element={<Reports />} />
 
-        {/* Notifications */}
-        <Route path="/notifications" element={<Notifications />} />
+          {/* Notifications */}
+          <Route path="/notifications" element={<Notifications />} />
 
-        {/* User Profile */}
-        <Route path="/profile" element={<Profile />} />
+          {/* User Profile */}
+          <Route path="/profile" element={<Profile />} />
 
-        {/* System Settings */}
-        <Route path="/settings" element={<Settings />} />
+          {/* System Settings */}
+          <Route path="/settings" element={<Settings />} />
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />

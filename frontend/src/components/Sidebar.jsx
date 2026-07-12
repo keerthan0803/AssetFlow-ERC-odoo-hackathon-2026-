@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { getAuthRole, getAuthUserName, clearAuthSession } from '../lib/authSession';
 
 const NAV_ITEMS = [
   { label: 'Dashboard',             path: '/',                        icon: 'dashboard' },
@@ -21,12 +22,21 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('af_logged_in_user');
+    clearAuthSession();
     toast.success('Successfully logged out.');
     navigate('/login');
   };
 
-  const user = localStorage.getItem('af_logged_in_user') || 'Admin';
+  const user = getAuthUserName();
+  const role = getAuthRole().toUpperCase();
+
+  const allowedItems = NAV_ITEMS.filter(item => {
+    if (item.path === '/organization/departments') return role === 'ADMIN';
+    if (item.path === '/audit') return role === 'ADMIN' || role === 'ASSET_MANAGER';
+    if (item.path === '/reports') return role === 'ADMIN' || role === 'ASSET_MANAGER';
+    if (item.path === '/settings') return role === 'ADMIN';
+    return true;
+  });
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white border-r border-[#bfc9c5]/60 shadow-xs font-sans w-64">
@@ -53,7 +63,7 @@ export default function Sidebar() {
 
       {/* Navigation List */}
       <nav className="flex-1 px-3 py-5 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-slate-200">
-        {NAV_ITEMS.map(item => {
+        {allowedItems.map(item => {
           const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
           return (
             <Link
@@ -105,7 +115,7 @@ export default function Sidebar() {
             </div>
             <div className="flex-1 min-w-0 text-left">
               <p className="text-xs font-bold text-slate-800 truncate leading-none">{user}</p>
-              <p className="text-[9px] text-[#404946] font-bold uppercase tracking-wider mt-1">Operator</p>
+              <p className="text-[9px] text-[#404946] font-bold uppercase tracking-wider mt-1">{role.replace('_', ' ')}</p>
             </div>
           </div>
           <button 

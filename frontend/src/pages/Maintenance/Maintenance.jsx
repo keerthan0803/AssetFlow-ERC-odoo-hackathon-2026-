@@ -1,66 +1,147 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
+import { 
+  fetchMaintenanceRequests, 
+  raiseMaintenanceRequest, 
+  updateMaintenanceStatus,
+  fetchAssets 
+} from '../../lib/api';
 
-const INITIAL_TICKETS = [
-  { id: 'AF-0062', title: 'Projector bulb not turning on', desc: 'Main briefing hall projector bulb fails to ignite. Spare bulb in supply cabinet.', status: 'Pending', priority: 'High', time: 'Reported 2h ago', assignee: '' },
-  { id: 'AF-0031', title: 'AC unit noisy compressor', desc: 'Server room intake HVAC is experiencing heavy vibrations. Inspection approved.', status: 'Approved', priority: 'Medium', time: 'Approved by M. Chen', assignee: '' },
-  { id: 'AF-0078', title: 'Forklift Steering Calibration', desc: 'Hydraulic leak checked. Needs mechanical realignment.', status: 'Assigned', priority: 'High', time: 'Assigned 4h ago', assignee: 'R. Varma' },
-  { id: 'AF-0897', title: 'IT Printer Jam', desc: 'Department network printer needs roller replacement.', status: 'In Progress', priority: 'Low', time: 'Parts ordered', progress: 60, assignee: 'Tech Team' },
-  { id: 'AF-0873', title: 'Chair repair', desc: 'Conference chair hydraulic cylinder replaced.', status: 'Resolved', priority: 'Routine', time: 'resolved 7 Jul', assignee: 'S. Gupta' },
-  { id: 'AF-0112', title: 'Desk 12 Leg Stabilization', desc: 'Standing desk height locking pins realigned.', status: 'Resolved', priority: 'Routine', time: 'resolved 5 Jul', assignee: 'J. Wilson' },
+const STATUS_COLUMNS = [
+  { key: 'PENDING', label: 'Pending' },
+  { key: 'APPROVED', label: 'Approved' },
+  { key: 'TECHNICIAN_ASSIGNED', label: 'Assigned' },
+  { key: 'IN_PROGRESS', label: 'In Progress' },
+  { key: 'RESOLVED', label: 'Resolved' }
 ];
 
 export default function Maintenance() {
-  const [tickets, setTickets] = useState(INITIAL_TICKETS);
+  const [tickets, setTickets] = useState([]);
+  const [assets, setAssets] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('All');
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ title: '', id: '', desc: '', status: 'Pending', priority: 'High', assignee: '' });
-  const [aiQuery, setAiQuery] = useState('');
+  
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({ assetId: '', issueDescription: '', priority: 'MEDIUM', photoUrl: '' });
+  
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [statusForm, setStatusForm] = useState({ status: '', technicianName: '', remarks: '' });
 
-  const handleAiSend = (e) => {
-    e.preventDefault();
-    if (!aiQuery.trim()) return;
-    toast.loading('Analyzing maintenance logs baseline…', { id: 'ai' });
-    setTimeout(() => {
-      toast.success('Lumina AI: Maintenance resolution is at 94% optimal levels.', { id: 'ai', duration: 4000 });
-      setAiQuery('');
-    }, 1200);
+  useEffect(() => {
+    loadTickets();
+    fetchAssets()
+      .then(setAssets)
+      .catch(() => {});
+  }, []);
+
+  const loadTickets = () => {
+    fetchMaintenanceRequests()
+      .then(setTickets)
+      .catch(() => {
+        toast.error('Failed to load maintenance requests.');
+      });
   };
 
   const handleCreate = (e) => {
     e.preventDefault();
-    if (!form.title || !form.id) {
-      toast.error('Title and Asset ID are required');
+    if (!createForm.assetId || !createForm.issueDescription) {
+      toast.error('Asset and Description are required');
       return;
     }
-    setTickets(prev => [...prev, {
-      ...form,
-      time: 'Reported just now'
-    }]);
-    toast.success(`Service ticket raised for ${form.id}!`);
-    setForm({ title: '', id: '', desc: '', status: 'Pending', priority: 'High', assignee: '' });
-    setShowModal(false);
+
+    toast.promise(
+      raiseMaintenanceRequest({
+        assetId: parseInt(createForm.assetId),
+        raisedById: 1, // default admin actor
+        issueDescription: createForm.issueDescription,
+        priority: createForm.priority,
+        photoUrl: createForm.photoUrl
+      }),
+      {
+        loading: 'Raising maintenance request...',
+        success: () => {
+          setShowCreateModal(false);
+          setCreateForm({ assetId: '', issueDescription: '', priority: 'MEDIUM', photoUrl: '' });
+          loadTickets();
+          return 'Service request raised successfully!';
+        },
+        error: (err) => `Failed to raise request: ${err.message}`
+      }
+    );
+  };
+
+  const handleCardClick = (ticket) => {
+    setSelectedTicket(ticket);
+    setStatusForm({
+      status: ticket.status,
+      technicianName: ticket.technicianName || '',
+      remarks: ticket.remarks || ''
+    });
+    setShowStatusModal(true);
+  };
+
+  const handleUpdateStatusSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedTicket) return;
+
+    toast.promise(
+      updateMaintenanceStatus(selectedTicket.id, {
+        status: statusForm.status,
+        actorEmployeeId: 1, // default admin actor
+        technicianName: statusForm.technicianName,
+        remarks: statusForm.remarks
+      }),
+      {
+        loading: 'Updating ticket status...',
+        success: () => {
+          setShowStatusModal(false);
+          setSelectedTicket(null);
+          loadTickets();
+          return 'Ticket status updated!';
+        },
+        error: (err) => `Failed to update ticket: ${err.message}`
+      }
+    );
   };
 
   const filtered = tickets.filter(t => {
-    const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          t.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (t.desc && t.desc.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesPriority = priorityFilter === 'All' || t.priority === priorityFilter;
+    const assetTag = t.asset?.assetTag || '';
+    const assetName = t.asset?.assetName || '';
+    const q = searchQuery.toLowerCase();
+    
+    const matchesSearch = t.issueDescription.toLowerCase().includes(q) || 
+                          assetTag.toLowerCase().includes(q) || 
+                          assetName.toLowerCase().includes(q);
+                          
+    const matchesPriority = priorityFilter === 'All' || t.priority === priorityFilter.toUpperCase();
     return matchesSearch && matchesPriority;
   });
 
-  const getColCount = (status) => filtered.filter(t => t.status === status).length;
+  const getColCount = (colKey) => {
+    return filtered.filter(t => {
+      if (colKey === 'RESOLVED') {
+        return t.status === 'RESOLVED' || t.status === 'CLOSED';
+      }
+      return t.status === colKey;
+    }).length;
+  };
+
+  const getPriorityIcon = (p) => {
+    if (p === 'HIGH' || p === 'CRITICAL') {
+      return <span className="material-symbols-outlined text-[#ba1a1a] text-lg font-bold">priority_high</span>;
+    }
+    return <span className="material-symbols-outlined text-slate-400 text-base">info</span>;
+  };
 
   return (
     <div className="flex min-h-screen bg-[#F9F9F7] font-sans antialiased text-[#1a1c1b]">
       <Sidebar />
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-               {/* Reusable Header */}
+        {/* Reusable Header */}
         <Header showSearch={true} searchQuery={searchQuery} setSearchQuery={setSearchQuery} placeholder="Search maintenance tickets, assets, or technicians..." />
 
         {/* Content Area */}
@@ -80,14 +161,7 @@ export default function Maintenance() {
             
             <div className="flex gap-2 shrink-0">
               <button 
-                onClick={() => setPriorityFilter('All')}
-                className="flex items-center gap-1 px-4 py-2.5 bg-white border border-[#bfc9c5]/40 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-base">filter_list</span>
-                Priority: {priorityFilter}
-              </button>
-              <button 
-                onClick={() => setShowModal(true)}
+                onClick={() => setShowCreateModal(true)}
                 className="flex items-center gap-1.5 bg-[#00352d] hover:bg-[#0d4d43] text-white px-5 py-3 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-base">add</span>
@@ -98,14 +172,14 @@ export default function Maintenance() {
 
           {/* Quick Filters */}
           <div className="mb-8 flex flex-wrap gap-2">
-            {['All', 'Low', 'Medium', 'High', 'Urgent'].map(p => (
+            {['All', 'Low', 'Medium', 'High', 'Critical'].map(p => (
               <button 
                 key={p}
                 onClick={() => setPriorityFilter(p)}
                 className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full border transition-all cursor-pointer ${
                   priorityFilter === p 
                     ? 'bg-[#0d4d43] border-[#0d4d43] text-white' 
-                    : 'bg-white border-[#bfc9c5]/40 text-slate-600 hover:bg-slate-50'
+                    : 'bg-white border-[#bfc9c5]/40 text-slate-650 hover:bg-slate-50'
                 }`}
               >
                 {p}
@@ -115,251 +189,109 @@ export default function Maintenance() {
 
           {/* Kanban Board Layout */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
-            
-            {/* Column: Pending */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between px-2">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  Pending 
-                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('Pending')}</span>
-                </h3>
-              </div>
-              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
-                {filtered.filter(t => t.status === 'Pending').map(t => (
-                  <div key={t.id} className="bg-white border border-[#bfc9c5]/40 p-4 rounded-xl shadow-xs hover:border-[#00352d]/45 transition-all cursor-pointer group">
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="text-[9px] font-black text-[#00352d] bg-[#b3eee0]/40 px-2 py-0.5 rounded">{t.id}</span>
-                      {t.priority === 'High' && <span className="material-symbols-outlined text-[#ba1a1a] text-lg font-bold">priority_high</span>}
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00352d] transition-colors">{t.title}</h4>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-3 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-xs">schedule</span> {t.time}
-                    </p>
+            {STATUS_COLUMNS.map(col => {
+              const colTickets = filtered.filter(t => {
+                if (col.key === 'RESOLVED') {
+                  return t.status === 'RESOLVED' || t.status === 'CLOSED';
+                }
+                return t.status === col.key;
+              });
+
+              return (
+                <div key={col.key} className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between px-2">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                      {col.label} 
+                      <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount(col.key)}</span>
+                    </h3>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Column: Approved */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between px-2">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  Approved 
-                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('Approved')}</span>
-                </h3>
-              </div>
-              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
-                {filtered.filter(t => t.status === 'Approved').map(t => (
-                  <div key={t.id} className="bg-white border border-[#bfc9c5]/40 p-4 rounded-xl shadow-xs hover:border-[#00352d]/45 transition-all cursor-pointer group">
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="text-[9px] font-black text-[#00352d] bg-[#b3eee0]/40 px-2 py-0.5 rounded">{t.id}</span>
-                      <span className="material-symbols-outlined text-slate-400 text-base">info</span>
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00352d] transition-colors">{t.title}</h4>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-3 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-xs">person</span> Approved by M. Chen
-                    </p>
+                  <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
+                    {colTickets.map(t => (
+                      <div 
+                        key={t.id} 
+                        onClick={() => handleCardClick(t)}
+                        className="bg-white border border-[#bfc9c5]/40 p-4 rounded-xl shadow-xs hover:border-[#00352d]/45 transition-all cursor-pointer group"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <span className="text-[9px] font-black text-[#00352d] bg-[#b3eee0]/40 px-2 py-0.5 rounded">{t.asset?.assetTag}</span>
+                          {getPriorityIcon(t.priority)}
+                        </div>
+                        <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00352d] transition-colors">{t.issueDescription}</h4>
+                        {t.technicianName && (
+                          <div className="mt-4 flex items-center gap-2 p-2 bg-[#f4f4f1] rounded-xl border border-[#bfc9c5]/30">
+                            <span className="text-[10px] text-slate-655 font-bold">Tech: {t.technicianName}</span>
+                          </div>
+                        )}
+                        <p className="text-[9px] text-slate-400 font-bold mt-2 font-mono">{new Date(t.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Column: Assigned */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between px-2">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  Assigned 
-                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('Assigned')}</span>
-                </h3>
-              </div>
-              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
-                {filtered.filter(t => t.status === 'Assigned').map(t => (
-                  <div key={t.id} className="bg-white border border-[#bfc9c5]/40 p-4 rounded-xl shadow-xs hover:border-[#00352d]/45 transition-all cursor-pointer group">
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="text-[9px] font-black text-[#00352d] bg-[#b3eee0]/40 px-2 py-0.5 rounded">{t.id}</span>
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00352d] transition-colors">{t.title}</h4>
-                    <div className="mt-4 flex items-center gap-2 p-2 bg-[#f4f4f1] rounded-xl border border-[#bfc9c5]/30">
-                      <div className="w-5.5 h-5.5 rounded-full bg-[#0d4d43] text-white text-[8px] flex items-center justify-center font-bold">
-                        {t.assignee[0]}
-                      </div>
-                      <span className="text-[10px] text-slate-600 font-bold">Tech: {t.assignee}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Column: In Progress */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between px-2">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  In Progress 
-                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('In Progress')}</span>
-                </h3>
-              </div>
-              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
-                {filtered.filter(t => t.status === 'In Progress').map(t => (
-                  <div key={t.id} className="bg-white border border-[#bfc9c5]/40 p-4 rounded-xl shadow-xs hover:border-[#00352d]/45 transition-all cursor-pointer group">
-                    <div className="flex justify-between items-start mb-3">
-                      <span className="text-[9px] font-black text-[#00352d] bg-[#b3eee0]/40 px-2 py-0.5 rounded">{t.id}</span>
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00352d] transition-colors">{t.title}</h4>
-                    <div className="mt-3.5 space-y-1">
-                      <div className="flex justify-between text-[9px] font-bold text-slate-400">
-                        <span className="italic">{t.time}</span>
-                        <span>{t.progress}%</span>
-                      </div>
-                      <div className="h-1 bg-[#f4f4f1] rounded-full overflow-hidden border border-slate-200/50">
-                        <div className="h-full bg-[#00352d]" style={{ width: `${t.progress}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Column: Resolved */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between px-2">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  Resolved 
-                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('Resolved')}</span>
-                </h3>
-              </div>
-              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
-                {filtered.filter(t => t.status === 'Resolved').map(t => {
-                  const isChair = t.title === 'Chair repair';
-                  return (
-                    <div 
-                      key={t.id} 
-                      className={`p-4 rounded-xl shadow-xs transition-all cursor-pointer border ${
-                        isChair 
-                          ? 'bg-[#0d4d43] border-[#0d4d43] text-white hover:brightness-105' 
-                          : 'bg-white border-[#bfc9c5]/35 opacity-65 grayscale hover:grayscale-0 hover:opacity-100'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <span className={`text-[9px] font-black px-2 py-0.5 rounded ${isChair ? 'bg-white/10 text-white' : 'bg-[#b3eee0]/40 text-[#00352d]'}`}>{t.id}</span>
-                        <span className={`material-symbols-outlined text-base ${isChair ? 'text-[#83bdb0]' : 'text-slate-400'}`} style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                      </div>
-                      <h4 className={`text-xs font-bold ${isChair ? 'text-white' : 'text-slate-800'}`}>{t.title}</h4>
-                      <p className={`text-[9px] font-semibold mt-3 ${isChair ? 'text-[#83bdb0]' : 'text-slate-400'}`}>{t.time}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
+                </div>
+              );
+            })}
           </div>
 
-          {/* Centered Pill Info Footer */}
-          <footer className="mt-12 flex items-center justify-center">
-            <div className="flex items-center gap-2 px-6 py-3 bg-[#f4f4f1] rounded-full border border-[#bfc9c5]/40 text-xs text-slate-500 font-semibold shadow-xs">
-              <span className="material-symbols-outlined text-[#00352d] text-base">info</span>
-              <span>Approving a card moves the asset to under maintenance, resolving returns it to available.</span>
-            </div>
-          </footer>
-
         </div>
-
-        {/* AI chat assistant prompt */}
-        <div className="fixed bottom-6 right-6 z-50 w-80 md:w-96">
-          <form 
-            onSubmit={handleAiSend}
-            className="bg-white border border-[#bfc9c5]/50 p-2 rounded-2xl flex items-center gap-3 shadow-xl transition-all duration-300"
-          >
-            <div className="w-8.5 h-8.5 rounded-xl bg-[#00352d] text-white flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-sm">smart_toy</span>
-            </div>
-            <input 
-              className="bg-transparent border-none outline-none focus:ring-0 text-xs text-slate-800 placeholder-slate-400 flex-1 px-1 py-1" 
-              placeholder="Ask AI about maintenance tasks..." 
-              type="text"
-              value={aiQuery}
-              onChange={e => setAiQuery(e.target.value)}
-            />
-            <button type="submit" className="p-1.5 hover:bg-slate-50 text-[#00352d] rounded-xl cursor-pointer flex shrink-0">
-              <span className="material-symbols-outlined text-base">send</span>
-            </button>
-          </form>
-        </div>
-
       </main>
 
-      {/* Raise Ticket Modal Dialog */}
-      {showModal && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
-          onClick={() => setShowModal(false)}
-        >
-          <div 
-            className="bg-white border border-slate-100 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-6 text-left animate-slide-up"
-            onClick={e => e.stopPropagation()}
-          >
+      {/* Raise Ticket Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowCreateModal(false)}>
+          <div className="bg-white border border-slate-100 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-6 text-left animate-slide-up" onClick={e => e.stopPropagation()}>
             <div>
-              <h3 className="text-base font-black text-slate-900 tracking-tight">Raise Service Ticket</h3>
-              <p className="text-xs text-slate-400 font-semibold mt-1">Submit maintenance request to engineering pool</p>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">Raise Maintenance Ticket</h3>
+              <p className="text-xs text-slate-400 font-semibold mt-1">Log equipment failures for service realignments</p>
             </div>
 
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Asset ID Tag *</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="e.g. AF-0062"
-                    value={form.id}
-                    onChange={e => setForm(p => ({ ...p, id: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Issue Title *</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="e.g. Broken AC Compressor"
-                    value={form.title}
-                    onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30"
-                  />
-                </div>
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Select Asset *</label>
+                <select
+                  required
+                  value={createForm.assetId}
+                  onChange={e => setCreateForm(p => ({ ...p, assetId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-850 focus:outline-none bg-white cursor-pointer"
+                >
+                  <option value="">Select Asset...</option>
+                  {assets.map(a => (
+                    <option key={a.id} value={a.id}>{a.tag} - {a.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
-                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Description</label>
-                <textarea 
-                  rows={3}
-                  placeholder="Provide precise details of the anomaly..."
-                  value={form.desc}
-                  onChange={e => setForm(p => ({ ...p, desc: e.target.value }))}
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Issue Description *</label>
+                <textarea
+                  required
+                  placeholder="Explain the technical issue or malfunction..."
+                  value={createForm.issueDescription}
+                  onChange={e => setCreateForm(p => ({ ...p, issueDescription: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30 resize-none"
+                  rows={3}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Priority Level</label>
-                  <select 
-                    value={form.priority}
-                    onChange={e => setForm(p => ({ ...p, priority: e.target.value }))}
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Priority</label>
+                  <select
+                    value={createForm.priority}
+                    onChange={e => setCreateForm(p => ({ ...p, priority: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none bg-white cursor-pointer"
                   >
-                    <option value="Low">Low</option>
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="CRITICAL">Critical</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Assignee Technician</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. R. Varma"
-                    value={form.assignee}
-                    onChange={e => setForm(p => ({ ...p, assignee: e.target.value }))}
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Photo Reference URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://..."
+                    value={createForm.photoUrl}
+                    onChange={e => setCreateForm(p => ({ ...p, photoUrl: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30"
                   />
                 </div>
@@ -368,16 +300,88 @@ export default function Maintenance() {
               <div className="flex justify-end gap-2.5 pt-2">
                 <button 
                   type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-[#00352d] hover:bg-[#0d4d43] text-white rounded-xl text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm cursor-pointer"
                 >
-                  Submit Ticket
+                  Raise Ticket
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Progress / Status Modal */}
+      {showStatusModal && selectedTicket && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in" onClick={() => setShowStatusModal(false)}>
+          <div className="bg-white border border-slate-100 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-6 text-left animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">Progress Service Ticket</h3>
+              <p className="text-xs text-slate-400 font-semibold mt-1">Ticket ID: #{selectedTicket.id} | Asset: {selectedTicket.asset?.assetName}</p>
+            </div>
+
+            <form onSubmit={handleUpdateStatusSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Set Pipeline Status *</label>
+                <select
+                  required
+                  value={statusForm.status}
+                  onChange={e => setStatusForm(p => ({ ...p, status: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-850 focus:outline-none bg-white cursor-pointer"
+                >
+                  <option value="PENDING">Pending Approval</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="TECHNICIAN_ASSIGNED">Assign Technician</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="RESOLVED">Resolved</option>
+                  <option value="CLOSED">Closed (Archived)</option>
+                </select>
+              </div>
+
+              {(statusForm.status === 'TECHNICIAN_ASSIGNED' || statusForm.status === 'IN_PROGRESS' || statusForm.status === 'RESOLVED') && (
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Technician / Team Name *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. Ramesh Varma"
+                    value={statusForm.technicianName}
+                    onChange={e => setStatusForm(p => ({ ...p, technicianName: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-850 focus:outline-none bg-slate-50/30"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Remarks / Diagnostics Notes</label>
+                <textarea
+                  placeholder="e.g. Replaced faulty capacitor..."
+                  value={statusForm.remarks}
+                  onChange={e => setStatusForm(p => ({ ...p, remarks: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30 resize-none"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setShowStatusModal(false)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm cursor-pointer"
+                >
+                  Update Ticket
                 </button>
               </div>
             </form>

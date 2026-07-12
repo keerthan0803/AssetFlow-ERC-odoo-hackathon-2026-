@@ -1,36 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
-
-const INITIAL_DEPARTMENTS = [
-  { id: 1, name: 'Engineering', count: 42, icon: 'terminal', head: 'Aditi Rao', headImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAvxmqPvk4FTnFR6Uk43foqZV_1b_5yyaexfmI6IYl8h2Dobee4jBaCvqA6a6K6iubhXPodDGEaNcIsyqrgEBEy9GOPqwIzhRHLxHf8pQl_G-_sctFn8wuJhJSDSAdqvUj76jqK0_eF2jC-htOHUlcXjBJecv7Nbu4hlmC-ODlHvJdNthT05D57XdeB0sVyiKFNGscK0A5WQJfFsubqd-MbP2xVLftNxZJx9txyq2jCgMz6ERILePC8', parentDept: '—', status: 'Active' },
-  { id: 2, name: 'Facilities', count: 156, icon: 'apartment', head: 'Rohan Mehta', headImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA161pdn6OY8C5et2nEaAnx_xGJ1H07Z64izjdqDxqLYgrqzgLPrM5nUmof55UEm_AlAg0N_KYRlcpfvepyzXaXzBgrIdLWZI1l43HmyhqmLPifO3I24EdkCTOQwseDbRiMKbprEs2_cedIFmnqjPmFADnJr_dDJ4Yz8RI4Y_pY3aj3uwp_TDJ8jVGDINWnifSrl4KowjPluUlsKod-Yzresd_FaiEQ6OJyxzL2PHWqhtyhiNxZmNs8', parentDept: '—', status: 'Active' },
-  { id: 3, name: 'Field Ops (East)', count: 32, icon: 'travel_explore', head: 'Sana Iqbal', headImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgJJII6_ns9IuQZFWExkxIJMEL0GTXbimocPMx-Cn_o0_fjcyh0N-v3mmssSN84ty2xCNZMy-__qiSoBxWpfc6pBLHkdL7B4tg3d_OBGrnM9u000U8aSJ-JVwfyKMexU-HrEa7qa4jLOLEkThLUtnKXc_vksyCeZ-SXqwBlmY1G8_2QYNrVd8aCDXr7DvG5lLwlVS89GcNh9qnQXWdW3TRKKNialYYWImP3LxKEPV3X-9jOobPg4F0', parentDept: 'Field Ops', status: 'Inactive' },
-];
-
-const INITIAL_CATEGORIES = [
-  { id: 1, name: 'Electronics', description: 'Laptops, monitors, telecommunication gear', count: 48 },
-  { id: 2, name: 'Furniture', description: 'Ergonomic chairs, standing desks, cabinets', count: 32 },
-  { id: 3, name: 'Vehicles', description: 'Company delivery fleet and field utility vans', count: 12 },
-  { id: 4, name: 'Infrastructure', description: 'Rack servers, storage units, edge switches', count: 27 },
-];
-
-const INITIAL_EMPLOYEES = [
-  { id: 1, name: 'Aditi Rao', email: 'aditi.r@assetflow.com', dept: 'Engineering', role: 'Head of Engineering', status: 'Active', headImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAvxmqPvk4FTnFR6Uk43foqZV_1b_5yyaexfmI6IYl8h2Dobee4jBaCvqA6a6K6iubhXPodDGEaNcIsyqrgEBEy9GOPqwIzhRHLxHf8pQl_G-_sctFn8wuJhJSDSAdqvUj76jqK0_eF2jC-htOHUlcXjBJecv7Nbu4hlmC-ODlHvJdNthT05D57XdeB0sVyiKFNGscK0A5WQJfFsubqd-MbP2xVLftNxZJx9txyq2jCgMz6ERILePC8' },
-  { id: 2, name: 'Rohan Mehta', email: 'rohan.m@assetflow.com', dept: 'Facilities', role: 'Facilities Manager', status: 'Active', headImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA161pdn6OY8C5et2nEaAnx_xGJ1H07Z64izjdqDxqLYgrqzgLPrM5nUmof55UEm_AlAg0N_KYRlcpfvepyzXaXzBgrIdLWZI1l43HmyhqmLPifO3I24EdkCTOQwseDbRiMKbprEs2_cedIFmnqjPmFADnJr_dDJ4Yz8RI4Y_pY3aj3uwp_TDJ8jVGDINWnifSrl4KowjPluUlsKod-Yzresd_FaiEQ6OJyxzL2PHWqhtyhiNxZmNs8' },
-  { id: 3, name: 'Sana Iqbal', email: 'sana.i@assetflow.com', dept: 'Field Ops (East)', role: 'Field Lead', status: 'Inactive', headImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgJJII6_ns9IuQZFWExkxIJMEL0GTXbimocPMx-Cn_o0_fjcyh0N-v3mmssSN84ty2xCNZMy-__qiSoBxWpfc6pBLHkdL7B4tg3d_OBGrnM9u000U8aSJ-JVwfyKMexU-HrEa7qa4jLOLEkThLUtnKXc_vksyCeZ-SXqwBlmY1G8_2QYNrVd8aCDXr7DvG5lLwlVS89GcNh9qnQXWdW3TRKKNialYYWImP3LxKEPV3X-9jOobPg4F0' },
-];
+import { 
+  fetchDepartments, 
+  createDepartment, 
+  fetchCategories, 
+  createCategory, 
+  fetchEmployees, 
+  promoteEmployee 
+} from '../../lib/api';
 
 export default function Departments() {
   const [activeTab, setActiveTab] = useState('Departments');
-  const [departments, setDepartments] = useState(INITIAL_DEPARTMENTS);
-  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
-  const [employees, setEmployees] = useState(INITIAL_EMPLOYEES);
+  const [departments, setDepartments] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
   const [selectedRows, setSelectedRows] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', head: '', parentDept: '', description: '', email: '', role: '', dept: 'Engineering', status: 'Active' });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = () => {
+    fetchDepartments()
+      .then(data => {
+        setDepartments(data.map(d => ({
+          id: d.id,
+          name: d.departmentName,
+          head: d.departmentHead ? `${d.departmentHead.firstName} ${d.departmentHead.lastName}` : 'Unassigned',
+          headImg: d.departmentHead?.profileImage || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAx-aYNuMHnK-OfIRzsZuFBSJRg5e9N244KJYHnPEhhFoLYjidnDaZ87qek-mhoxf_IGua8aOwmmOQFDXxnKo1cxJOiONNTrCrQMTfdoz8kdcHzWBP2_KQ21XDeuMpxl-5NdYrMYoLJY6yppeFYjiIMl62Wlq1clNnPN57H82EN5aqIZ49xjqVz1NfSAggWthedpN-rcjblR-zB0AF9znhFp_PPePCI9NoXNQ5nZGIGT93odfCpPRUA',
+          parentDept: d.parentDepartment ? d.parentDepartment.departmentName : '—',
+          status: d.status ? 'Active' : 'Inactive',
+          count: 0
+        })));
+      })
+      .catch(() => {});
+
+    fetchCategories()
+      .then(data => {
+        setCategories(data.map(c => ({
+          id: c.id,
+          name: c.categoryName,
+          description: c.description || 'No description',
+          count: 0
+        })));
+      })
+      .catch(() => {});
+
+    fetchEmployees()
+      .then(data => {
+        setEmployees(data.map(e => ({
+          id: e.id,
+          name: `${e.firstName} ${e.lastName}`,
+          email: e.email,
+          dept: e.department ? e.department.departmentName : '—',
+          role: e.role ? e.role.roleName : 'EMPLOYEE',
+          status: e.status ? 'Active' : 'Inactive',
+          headImg: e.profileImage || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAx-aYNuMHnK-OfIRzsZuFBSJRg5e9N244KJYHnPEhhFoLYjidnDaZ87qek-mhoxf_IGua8aOwmmOQFDXxnKo1cxJOiONNTrCrQMTfdoz8kdcHzWBP2_KQ21XDeuMpxl-5NdYrMYoLJY6yppeFYjiIMl62Wlq1clNnPN57H82EN5aqIZ49xjqVz1NfSAggWthedpN-rcjblR-zB0AF9znhFp_PPePCI9NoXNQ5nZGIGT93odfCpPRUA'
+        })));
+      })
+      .catch(() => {});
+  };
 
   const handleSelectAll = (e, list) => {
     if (e.target.checked) {
@@ -46,6 +80,17 @@ export default function Departments() {
     );
   };
 
+  const handlePromote = (employeeId, roleName) => {
+    promoteEmployee(employeeId, roleName)
+      .then(() => {
+        toast.success(`Role updated successfully to ${roleName}`);
+        loadData();
+      })
+      .catch((err) => {
+        toast.error(`Promotion failed: ${err.message}`);
+      });
+  };
+
   const handleAdd = (e) => {
     e.preventDefault();
     if (!form.name.trim()) {
@@ -54,37 +99,35 @@ export default function Departments() {
     }
 
     if (activeTab === 'Departments') {
-      const newId = Date.now();
-      setDepartments(prev => [...prev, {
-        id: newId,
+      const matchHead = employees.find(emp => emp.name.toLowerCase() === form.head.toLowerCase());
+      const headId = matchHead ? matchHead.id : null;
+      
+      const matchParent = departments.find(dept => dept.name.toLowerCase() === form.parentDept.toLowerCase());
+      const parentId = matchParent ? matchParent.id : null;
+
+      createDepartment({
         name: form.name,
-        count: 0,
-        icon: 'terminal',
-        head: form.head || 'Unassigned',
-        headImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAx-aYNuMHnK-OfIRzsZuFBSJRg5e9N244KJYHnPEhhFoLYjidnDaZ87qek-mhoxf_IGua8aOwmmOQFDXxnKo1cxJOiONNTrCrQMTfdoz8kdcHzWBP2_KQ21XDeuMpxl-5NdYrMYoLJY6yppeFYjiIMl62Wlq1clNnPN57H82EN5aqIZ49xjqVz1NfSAggWthedpN-rcjblR-zB0AF9znhFp_PPePCI9NoXNQ5nZGIGT93odfCpPRUA',
-        parentDept: form.parentDept || 'None',
-        status: form.status,
-      }]);
-      toast.success(`Department "${form.name}" added`);
+        headId: headId,
+        parentId: parentId,
+        status: form.status === 'Active'
+      })
+        .then(() => {
+          toast.success(`Department "${form.name}" added`);
+          loadData();
+        })
+        .catch(err => toast.error(err.message));
     } else if (activeTab === 'Categories') {
-      setCategories(prev => [...prev, {
-        id: Date.now(),
+      createCategory({
         name: form.name,
-        description: form.description || 'No description',
-        count: 0
-      }]);
-      toast.success(`Category "${form.name}" added`);
+        description: form.description
+      })
+        .then(() => {
+          toast.success(`Category "${form.name}" added`);
+          loadData();
+        })
+        .catch(err => toast.error(err.message));
     } else if (activeTab === 'Employee') {
-      setEmployees(prev => [...prev, {
-        id: Date.now(),
-        name: form.name,
-        email: form.email || '—',
-        dept: form.dept,
-        role: form.role || 'Associate',
-        status: form.status,
-        headImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAx-aYNuMHnK-OfIRzsZuFBSJRg5e9N244KJYHnPEhhFoLYjidnDaZ87qek-mhoxf_IGua8aOwmmOQFDXxnKo1cxJOiONNTrCrQMTfdoz8kdcHzWBP2_KQ21XDeuMpxl-5NdYrMYoLJY6yppeFYjiIMl62Wlq1clNnPN57H82EN5aqIZ49xjqVz1NfSAggWthedpN-rcjblR-zB0AF9znhFp_PPePCI9NoXNQ5nZGIGT93odfCpPRUA'
-      }]);
-      toast.success(`Employee "${form.name}" enrolled`);
+      toast.error('New employee registration must be performed via the Signup Screen.');
     }
 
     setForm({ name: '', head: '', parentDept: '', description: '', email: '', role: '', dept: 'Engineering', status: 'Active' });
@@ -396,7 +439,18 @@ export default function Departments() {
                           </td>
                           <td className="py-4 px-6 text-xs text-slate-500 font-mono font-medium">{e.email}</td>
                           <td className="py-4 px-6 text-xs text-slate-500 font-semibold">{e.dept}</td>
-                          <td className="py-4 px-6 text-xs text-slate-400 font-extrabold uppercase tracking-wider text-[9px]">{e.role}</td>
+                          <td className="py-4 px-6 text-xs">
+                            <select
+                              value={e.role}
+                              onChange={(evt) => handlePromote(e.id, evt.target.value)}
+                              className="bg-transparent border border-slate-200 rounded px-2 py-1 text-slate-800 text-[10px] font-bold uppercase tracking-wider focus:outline-none cursor-pointer"
+                            >
+                              <option value="EMPLOYEE">Employee</option>
+                              <option value="ASSET_MANAGER">Asset Manager</option>
+                              <option value="DEPARTMENT_HEAD">Department Head</option>
+                              <option value="ADMIN">Admin</option>
+                            </select>
+                          </td>
                           <td className="py-4 px-6">{getStatusBadge(e.status)}</td>
                         </tr>
                       ))}

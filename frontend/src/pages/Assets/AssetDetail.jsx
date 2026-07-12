@@ -3,12 +3,16 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
+import { fetchAssetDetail, fetchAssetHistory } from '../../lib/api';
 
 export default function AssetDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const assetId = id || 'AF-9088-QX';
+  const assetId = id;
 
+  const [asset, setAsset] = useState(null);
+  const [history, setHistory] = useState({ allocations: [], maintenance: [] });
+  const [loading, setLoading] = useState(true);
   const [aiText, setAiText] = useState('');
   const [activityTiles, setActivityTiles] = useState([]);
   const [isAiGlow, setIsAiGlow] = useState(false);
@@ -18,10 +22,10 @@ export default function AssetDetail() {
     const tiles = [];
     const intensities = [
       'bg-slate-100 hover:bg-slate-200', 
-      'bg-indigo-100 hover:bg-indigo-200', 
-      'bg-indigo-300 hover:bg-indigo-400', 
-      'bg-indigo-500 hover:bg-indigo-600', 
-      'bg-indigo-700 hover:bg-indigo-800'
+      'bg-[#b3eee0]/40 hover:bg-[#b3eee0]/60', 
+      'bg-[#b3eee0]/80 hover:bg-[#b3eee0]', 
+      'bg-[#0d4d43]/50 hover:bg-[#0d4d43]/70', 
+      'bg-[#00352d] hover:bg-black'
     ];
     for (let i = 0; i < 364; i++) {
       const intensity = Math.floor(Math.random() * 5);
@@ -30,22 +34,91 @@ export default function AssetDetail() {
     setActivityTiles(tiles);
   }, []);
 
+  useEffect(() => {
+    if (!assetId) return;
+    setLoading(true);
+    fetchAssetDetail(assetId)
+      .then(data => {
+        setAsset(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        toast.error('Failed to load asset details.');
+        setLoading(false);
+      });
+
+    fetchAssetHistory(assetId)
+      .then(data => {
+        setHistory(data);
+      })
+      .catch(() => {});
+  }, [assetId]);
+
   const handleAiSend = (e) => {
     e.preventDefault();
     if (!aiText.trim()) return;
     toast.loading(`Querying Lumina database for telemetry data…`, { id: 'ai' });
     setTimeout(() => {
-      toast.success(`Lumina AI: Telemetry for ${assetId} matches the active baseline. No immediate intervention required.`, { id: 'ai', duration: 4000 });
+      toast.success(`Lumina AI: Telemetry for ${asset?.assetName || 'Asset'} matches the active baseline. No immediate intervention required.`, { id: 'ai', duration: 4000 });
       setAiText('');
     }, 1500);
   };
+
+  const timelineEvents = [];
+  if (history.allocations) {
+    history.allocations.forEach(a => {
+      timelineEvents.push({
+        type: 'allocation',
+        title: `Asset Allocated to ${a.employee ? `${a.employee.firstName} ${a.employee.lastName}` : 'Unassigned'}`,
+        subtitle: `Allocation ID: ALL-${a.id} • Dept: ${a.department ? a.department.departmentName : '—'}`,
+        date: a.allocationDate || a.createdAt,
+        remarks: a.notes || `Asset allocated by ${a.allocatedBy ? `${a.allocatedBy.firstName} ${a.allocatedBy.lastName}` : 'System'}.`,
+        status: a.returnDate ? 'Returned' : 'Active',
+        isCritical: false,
+        icon: 'swap_horiz',
+        color: 'text-indigo-650',
+        badgeBg: 'bg-indigo-50 text-indigo-700 border-indigo-100'
+      });
+    });
+  }
+  if (history.maintenance) {
+    history.maintenance.forEach(m => {
+      const cleanStatus = m.status.charAt(0) + m.status.slice(1).toLowerCase().replace('_', ' ');
+      timelineEvents.push({
+        type: 'maintenance',
+        title: `Maintenance Request: ${m.issueDescription}`,
+        subtitle: `Priority: ${m.priority} • Tech Assigned: ${m.technicianName || 'None'}`,
+        date: m.createdAt,
+        remarks: m.remarks || `Status: ${cleanStatus}`,
+        status: cleanStatus,
+        isCritical: m.priority === 'HIGH' || m.priority === 'CRITICAL',
+        icon: 'build',
+        color: 'text-amber-500',
+        badgeBg: m.priority === 'CRITICAL' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-amber-50 text-amber-700 border-amber-100'
+      });
+    });
+  }
+  timelineEvents.sort((x, y) => new Date(y.date) - new Date(x.date));
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-[#FBFBFC] font-sans antialiased items-center justify-center">
+        <div className="text-center space-y-2">
+          <div className="w-8 h-8 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin mx-auto" />
+          <p className="text-xs text-slate-400 font-bold">Retrieving Asset Records...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const cleanStatus = asset?.status?.charAt(0) + asset?.status?.slice(1).toLowerCase().replace('_', ' ');
 
   return (
     <div className="flex min-h-screen bg-[#FBFBFC] font-sans antialiased text-slate-800">
       <Sidebar />
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         {/* Reusable Header */}
-        <Header showSearch={false} title={`Asset Details: ${assetId}`} />
+        <Header showSearch={false} title={`Asset Details: ${asset?.assetTag || assetId}`} />
 
         {/* Page Content */}
         <div className="px-8 py-6 max-w-7xl w-full mx-auto space-y-6">
@@ -55,13 +128,15 @@ export default function AssetDetail() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[#0d4d43] font-mono uppercase tracking-wider text-[10px] font-bold">
-                  Asset ID: {assetId}
+                  Asset Tag: {asset?.assetTag || '—'}
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[9px] text-emerald-700 font-bold border border-emerald-100 uppercase">
-                  Operational
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase ${
+                  asset?.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                }`}>
+                  {cleanStatus}
                 </span>
               </div>
-              <h1 className="text-xl font-black text-[#00352d] tracking-tight mt-1">Precision Core Facility A1</h1>
+              <h1 className="text-xl font-black text-[#00352d] tracking-tight mt-1">{asset?.assetName || 'Core Asset'}</h1>
             </div>
             
             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -73,11 +148,11 @@ export default function AssetDetail() {
                 Export Report
               </button>
               <button 
-                onClick={() => toast.success('Opening system calibration console…')}
+                onClick={() => navigate('/assets')}
                 className="px-4 py-2 bg-[#00352d] hover:bg-[#0d4d43] text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
-                <span className="material-symbols-outlined text-sm">settings</span>
-                Manage Configuration
+                <span className="material-symbols-outlined text-sm">arrow_back</span>
+                Back to Inventory
               </button>
             </div>
           </div>
@@ -92,8 +167,8 @@ export default function AssetDetail() {
               <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm relative group h-[340px]">
                 <img 
                   className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPtr8hGWy1JWe4acsawgn8tUn3z2AbvAwhRBFpmcvvqUfESEjg9IBBzamjAunV3kaV5p5BkGMIRGYDsxN-PjJLJ4tSZDzx38EAjqqqN1QIBlkfuMJMU9XyXS6HLNLNmS4-i_yIfOgWZ_zGFU3qqCqrCPHoPCJChwDby_q1Ja-itU67KbrZi9ti-VcNCWxTYTOLwJpsXj3V_YVAvpo2VA7KpYmyd-lfuHExX8jRjLGQlBdkt_y303i3"
-                  alt="Precision core server facility"
+                  src={asset?.category?.categoryName === 'Furniture' ? 'https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&q=80&w=600' : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBPtr8hGWy1JWe4acsawgn8tUn3z2AbvAwhRBFpmcvvqUfESEjg9IBBzamjAunV3kaV5p5BkGMIRGYDsxN-PjJLJ4tSZDzx38EAjqqqN1QIBlkfuMJMU9XyXS6HLNLNmS4-i_yIfOgWZ_zGFU3qqCqrCPHoPCJChwDby_q1Ja-itU67KbrZi9ti-VcNCWxTYTOLwJpsXj3V_YVAvpo2VA7KpYmyd-lfuHExX8jRjLGQlBdkt_y303i3'}
+                  alt="Asset image"
                 />
                 
                 {/* Visual telemetry overlay */}
@@ -117,81 +192,52 @@ export default function AssetDetail() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Integrity & Value gauges */}
+                         {/* Integrity & Value gauges */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Structural integrity */}
+                {/* Condition */}
                 <div className="bg-white border border-slate-100 p-4.5 rounded-2xl shadow-sm text-left">
                   <div className="flex justify-between items-start mb-3">
-                    <span className="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Structural Integrity</span>
-                    <span className="material-symbols-outlined text-emerald-500 text-sm">monitor_heart</span>
+                    <span className="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Asset Condition</span>
+                    <span className="material-symbols-outlined text-[#0d4d43] text-sm">tune</span>
                   </div>
-                  <div className="flex items-center gap-3.5">
-                    <div className="relative w-12 h-12 flex-shrink-0">
-                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <circle className="stroke-slate-100" cx="18" cy="18" fill="none" r="16" strokeWidth="3" />
-                        <circle className="stroke-emerald-500" cx="18" cy="18" fill="none" r="16" strokeDasharray="100" strokeDashoffset="5" strokeWidth="3" />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-bold text-slate-800">95%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-emerald-600">OPTIMAL</p>
-                      <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Last checked 2h ago</p>
-                    </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-700 uppercase">{asset?.condition || 'NOMINAL'}</p>
+                    <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Physical Integrity Status</p>
                   </div>
                 </div>
 
-                {/* Residual value */}
+                {/* Purchase Cost */}
                 <div className="bg-white border border-slate-100 p-4.5 rounded-2xl shadow-sm text-left">
                   <div className="flex justify-between items-start mb-3">
-                    <span className="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Residual Value</span>
+                    <span className="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Purchase Cost</span>
                     <span className="material-symbols-outlined text-indigo-500 text-sm">payments</span>
                   </div>
-                  <div className="flex items-center gap-3.5">
-                    <div className="relative w-12 h-12 flex-shrink-0">
-                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <circle className="stroke-slate-100" cx="18" cy="18" fill="none" r="16" strokeWidth="3" />
-                        <circle className="stroke-indigo-600" cx="18" cy="18" fill="none" r="16" strokeDasharray="100" strokeDashoffset="35" strokeWidth="3" />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-bold text-slate-800">65%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-indigo-600">$1.2M USD</p>
-                      <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Depreciation: Linear</p>
-                    </div>
+                  <div>
+                    <p className="text-xs font-bold text-indigo-650">${asset?.purchaseCost || '0.00'}</p>
+                    <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Asset Book Value</p>
                   </div>
                 </div>
               </div>
 
               {/* Sub-system lists */}
               <div className="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm text-left">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Sub-System Status</h3>
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Metadata Specifications</h3>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/50">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
-                      <span className="text-xs font-bold text-slate-700">Power Distribution Unit</span>
-                    </div>
-                    <span className="text-[9px] font-bold text-emerald-600 uppercase">Nominal</span>
+                    <span className="text-xs font-bold text-slate-700">Serial Number</span>
+                    <span className="text-xs font-mono text-slate-650">{asset?.serialNumber || '—'}</span>
                   </div>
                   <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/50">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
-                      <span className="text-xs font-bold text-slate-700">Environmental Controls</span>
-                    </div>
-                    <span className="text-[9px] font-bold text-emerald-600 uppercase">Nominal</span>
+                    <span className="text-xs font-bold text-slate-700">Location Area</span>
+                    <span className="text-xs font-semibold text-slate-650">{asset?.location || 'HQ Office'}</span>
                   </div>
                   <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/50">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-500 shadow-sm" />
-                      <span className="text-xs font-bold text-slate-700">Auxiliary Data Bus</span>
-                    </div>
-                    <span className="text-[9px] font-bold text-amber-600 uppercase">Service Req.</span>
+                    <span className="text-xs font-bold text-slate-700">Purchase Date</span>
+                    <span className="text-xs font-semibold text-slate-650">{asset?.purchaseDate || '—'}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/50">
+                    <span className="text-xs font-bold text-slate-700">Shared Bookable Resource</span>
+                    <span className="text-xs font-extrabold text-[#0d4d43] uppercase text-[9px]">{asset?.isBookable ? 'YES' : 'NO'}</span>
                   </div>
                 </div>
               </div>
@@ -210,10 +256,10 @@ export default function AssetDetail() {
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Less</span>
                     <div className="w-2.5 h-2.5 bg-slate-100 rounded-xs" />
-                    <div className="w-2.5 h-2.5 bg-indigo-100 rounded-xs" />
-                    <div className="w-2.5 h-2.5 bg-indigo-300 rounded-xs" />
-                    <div className="w-2.5 h-2.5 bg-indigo-500 rounded-xs" />
-                    <div className="w-2.5 h-2.5 bg-indigo-700 rounded-xs" />
+                    <div className="w-2.5 h-2.5 bg-[#b3eee0]/40 rounded-xs" />
+                    <div className="w-2.5 h-2.5 bg-[#b3eee0]/80 rounded-xs" />
+                    <div className="w-2.5 h-2.5 bg-[#0d4d43]/50 rounded-xs" />
+                    <div className="w-2.5 h-2.5 bg-[#00352d] rounded-xs" />
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">More</span>
                   </div>
                 </div>
@@ -242,75 +288,36 @@ export default function AssetDetail() {
                 </div>
 
                 <div className="flex-1 space-y-6 relative border-l border-slate-100 pl-6 ml-3">
-                  
-                  {/* Event 1 */}
-                  <div className="relative">
-                    <div className="absolute -left-[35px] top-0 w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center z-10 shadow-sm">
-                      <span className="material-symbols-outlined text-[12px] text-slate-600 font-bold">build</span>
-                    </div>
-                    <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
-                      <div>
-                        <h4 className="font-bold text-slate-800 text-xs">Scheduled Maintenance: Q3 Calibration</h4>
-                        <p className="text-[10px] text-slate-400 font-semibold font-mono mt-0.5">Oct 12, 2023 • Service Order #7721</p>
+                  {timelineEvents.length === 0 ? (
+                    <p className="text-xs text-slate-400 font-semibold">No lifecycle event records tracked for this asset.</p>
+                  ) : (
+                    timelineEvents.map((evt, idx) => (
+                      <div key={idx} className="relative">
+                        <div className="absolute -left-[35px] top-0 w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center z-10 shadow-sm">
+                          <span className={`material-symbols-outlined text-[12px] ${evt.color} font-bold`}>{evt.icon}</span>
+                        </div>
+                        <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
+                          <div>
+                            <h4 className="font-bold text-slate-800 text-xs">{evt.title}</h4>
+                            <p className="text-[10px] text-slate-400 font-semibold font-mono mt-0.5">
+                              {new Date(evt.date).toLocaleDateString()} • {evt.subtitle}
+                            </p>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold border uppercase ${evt.badgeBg}`}>
+                            {evt.status}
+                          </span>
+                        </div>
+                        <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl">
+                          <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                            {evt.remarks}
+                          </p>
+                        </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-100 uppercase">
-                        Completed
-                      </span>
-                    </div>
-                    <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl border-l-4 border-l-emerald-500">
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        Precision realignment of optical sensors and thermal buffer flushing. No significant wear detected in core components.
-                      </p>
-                      <div className="mt-3.5 flex gap-4 text-[9px] font-mono font-bold text-slate-400">
-                        <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-xs">person</span> J. Rodriguez</span>
-                        <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-xs">timer</span> 4.5h Duration</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Event 2 */}
-                  <div className="relative">
-                    <div className="absolute -left-[35px] top-0 w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center z-10 shadow-sm">
-                      <span className="material-symbols-outlined text-[12px] text-slate-600">swap_horiz</span>
-                    </div>
-                    <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
-                      <div>
-                        <h4 className="font-bold text-slate-800 text-xs">Asset Allocation Update</h4>
-                        <p className="text-[10px] text-slate-400 font-semibold font-mono mt-0.5">Aug 05, 2023 • Request ID: REQ-091</p>
-                      </div>
-                      <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold uppercase">
-                        System
-                      </span>
-                    </div>
-                    <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl">
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        Transferred from <span className="text-indigo-600 font-bold">Backup-Cluster B</span> to <span className="text-indigo-600 font-bold">Production Alpha</span> to meet surging computational demands.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Event 3 */}
-                  <div className="relative">
-                    <div className="absolute -left-[35px] top-0 w-6 h-6 rounded-full border border-red-200 bg-white flex items-center justify-center z-10 shadow-sm">
-                      <span className="material-symbols-outlined text-[12px] text-red-500 font-bold">warning</span>
-                    </div>
-                    <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
-                      <div>
-                        <h4 className="font-bold text-slate-800 text-xs">Critical Temperature Spike</h4>
-                        <p className="text-[10px] text-slate-400 font-semibold font-mono mt-0.5">June 21, 2023 • Event ID: ERR-104</p>
-                      </div>
-                      <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 text-[9px] font-bold border border-red-100 uppercase">
-                        Critical
-                      </span>
-                    </div>
-                    <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl border-l-4 border-l-red-500">
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        Core temperature reached 55°C. Automated cooling override engaged. System throttled to 50% capacity for 12 minutes.
-                      </p>
-                    </div>
-                  </div>
+                    ))
+                  )}
                 </div>
               </div>
+            </div>
             </div>
 
           </div>

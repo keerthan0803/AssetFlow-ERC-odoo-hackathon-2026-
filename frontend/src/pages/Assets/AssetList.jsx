@@ -1,21 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
-
-const INITIAL_ASSETS = [
-  { tag: 'AF-0012', name: 'Dell Latitude 5420', category: 'Electronics', status: 'Allocated', location: 'Bengaluru, KA', dept: 'Engineering', health: 88 },
-  { tag: 'AF-0062', name: 'Sony 4K Projector', category: 'Electronics', status: 'Maintenance', location: 'HQ Floor 2', dept: 'Facilities', health: 42 },
-  { tag: 'AF-0201', name: 'Herman Miller Aeron', category: 'Furniture', status: 'Available', location: 'Warehouse A', dept: 'HR', health: 100 },
-  { tag: 'AF-0914', name: 'iPad Pro 12.9"', category: 'Electronics', status: 'Allocated', location: 'Engineering Lab', dept: 'Engineering', health: 92 },
-  { tag: 'AF-0088', name: 'UltraSharp 27" Monitor', category: 'Electronics', status: 'Available', location: 'Warehouse A', dept: 'IT', health: 95 },
-  { tag: 'AF-0031', name: 'Industrial Scanner', category: 'Electronics', status: 'Allocated', location: 'Shipping Dock', dept: 'Operations', health: 84 },
-];
+import { fetchAssets, fetchCategories, registerAsset } from '../../lib/api';
 
 export default function AssetList() {
   const navigate = useNavigate();
-  const [assets, setAssets] = useState(INITIAL_ASSETS);
+  const [assets, setAssets] = useState([]);
+  const [categories, setCategories] = useState([]);
   
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('All Categories');
@@ -24,20 +17,44 @@ export default function AssetList() {
 
   const [selectedRows, setSelectedRows] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ tag: '', name: '', category: 'Electronics', status: 'Available', location: '', dept: '', health: 100 });
+  const [form, setForm] = useState({ name: '', categoryId: '', serialNumber: '', location: '', purchaseCost: '', purchaseDate: '', isBookable: false, health: 100 });
+
+  useEffect(() => {
+    loadAssets();
+    fetchCategories()
+      .then(setCategories)
+      .catch(() => {});
+  }, [search, catFilter, statusFilter]);
+
+  const loadAssets = () => {
+    fetchAssets({
+      q: search,
+      category: catFilter,
+      status: statusFilter
+    })
+      .then(data => {
+        setAssets(data.map(a => ({
+          id: a.id,
+          tag: a.assetTag,
+          name: a.assetName,
+          category: a.category.categoryName,
+          status: a.status.charAt(0) + a.status.slice(1).toLowerCase().replace('_', ' '),
+          location: a.location || 'HQ Office',
+          dept: a.department ? a.department.departmentName : '—',
+          health: 100 // default or note condition
+        })));
+      })
+      .catch(() => {
+        toast.error('Failed to load assets.');
+      });
+  };
 
   // Filter options
-  const cats = ['All Categories', ...new Set(assets.map(a => a.category))];
-  const statuses = ['Any Status', 'Available', 'Allocated', 'Maintenance'];
+  const cats = ['All Categories', ...categories.map(c => c.categoryName)];
+  const statuses = ['Any Status', 'Available', 'Allocated', 'Under Maintenance', 'Reserved', 'Lost', 'Retired', 'Disposed'];
   const depts = ['Global', ...new Set(assets.map(a => a.dept))];
 
-  const filtered = assets.filter(a => {
-    const q = search.toLowerCase();
-    return (!search || a.tag.toLowerCase().includes(q) || a.name.toLowerCase().includes(q) || a.location.toLowerCase().includes(q))
-      && (catFilter === 'All Categories' || a.category === catFilter)
-      && (statusFilter === 'Any Status' || a.status === statusFilter)
-      && (deptFilter === 'Global' || a.dept === deptFilter);
-  });
+  const filtered = assets; // Filtering is done by backend query params in fetchAssets
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -55,19 +72,36 @@ export default function AssetList() {
 
   const handleRegister = (e) => {
     e.preventDefault();
-    if (!form.tag || !form.name) { 
-      toast.error('Tag and Name are required.'); 
+    if (!form.name || !form.categoryId) { 
+      toast.error('Name and Category are required.'); 
       return; 
     }
-    setAssets(prev => [form, ...prev]);
-    toast.success(`Asset ${form.tag} successfully registered!`);
-    setForm({ tag: '', name: '', category: 'Electronics', status: 'Available', location: '', dept: '', health: 100 });
-    setShowModal(false);
+    
+    registerAsset({
+      name: form.name,
+      categoryId: parseInt(form.categoryId),
+      serialNumber: form.serialNumber,
+      purchaseDate: form.purchaseDate,
+      purchaseCost: form.purchaseCost,
+      condition: 'New',
+      location: form.location,
+      isBookable: form.isBookable,
+      creatorId: 1
+    })
+      .then((asset) => {
+        toast.success(`Asset ${asset.assetTag} successfully registered!`);
+        loadAssets();
+        setForm({ name: '', categoryId: '', serialNumber: '', location: '', purchaseCost: '', purchaseDate: '', isBookable: false, health: 100 });
+        setShowModal(false);
+      })
+      .catch((err) => {
+        toast.error(err.message);
+      });
   };
 
   // Sparkline Health Bars
   const renderSparkline = (health, status) => {
-    const isMaintenance = status === 'Maintenance';
+    const isMaintenance = status.toLowerCase().includes('maintenance');
     const barColor = isMaintenance ? 'bg-red-500' : 'bg-indigo-600';
     return (
       <div className="flex items-end gap-0.5 h-4 w-fit">
@@ -235,7 +269,7 @@ export default function AssetList() {
                       return (
                         <tr 
                           key={i} 
-                          onDoubleClick={() => navigate(`/assets/${a.tag}`)}
+                          onDoubleClick={() => navigate(`/assets/${a.id}`)}
                           className={`hover:bg-slate-50 transition-colors group cursor-pointer ${
                             isRowChecked ? 'bg-indigo-50/10' : ''
                           }`}
@@ -375,16 +409,14 @@ export default function AssetList() {
               <p className="text-xs text-slate-400 font-semibold mt-1">Log physical hardware to corporate index</p>
             </div>
 
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleRegister} className="space-y-4">              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Asset Tag *</label>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Serial Number</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. AF-0300"
-                    required
-                    value={form.tag}
-                    onChange={e => setForm(p => ({ ...p, tag: e.target.value }))}
+                    placeholder="e.g. SN-2039B"
+                    value={form.serialNumber}
+                    onChange={e => setForm(p => ({ ...p, serialNumber: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30"
                   />
                 </div>
@@ -410,12 +442,12 @@ export default function AssetList() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Department</label>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Cost</label>
                   <input 
-                    type="text" 
-                    placeholder="e.g. Engineering"
-                    value={form.dept}
-                    onChange={e => setForm(p => ({ ...p, dept: e.target.value }))}
+                    type="number" 
+                    placeholder="e.g. 1200"
+                    value={form.purchaseCost}
+                    onChange={e => setForm(p => ({ ...p, purchaseCost: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30"
                   />
                 </div>
@@ -423,24 +455,28 @@ export default function AssetList() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Category</label>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Category *</label>
                   <select 
-                    value={form.category}
-                    onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
+                    required
+                    value={form.categoryId}
+                    onChange={e => setForm(p => ({ ...p, categoryId: e.target.value }))}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none bg-white cursor-pointer"
                   >
-                    {['Electronics', 'Furniture', 'Infrastructure', 'Vehicles'].map(o => <option key={o} value={o}>{o}</option>)}
+                    <option value="">Select Category</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.categoryName}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Status</label>
-                  <select 
-                    value={form.status}
-                    onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none bg-white cursor-pointer"
-                  >
-                    {['Available', 'Allocated', 'Maintenance'].map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Is Shared Bookable Resource?</label>
+                  <div className="flex items-center mt-2">
+                    <input 
+                      type="checkbox"
+                      checked={form.isBookable}
+                      onChange={e => setForm(p => ({ ...p, isBookable: e.target.checked }))}
+                      className="rounded border-[#bfc9c5] text-[#00352d] focus:ring-[#00352d] cursor-pointer w-4 h-4"
+                    />
+                    <span className="text-xs font-semibold text-slate-600 ml-2">Bookable by slot</span>
+                  </div>
                 </div>
               </div>
 

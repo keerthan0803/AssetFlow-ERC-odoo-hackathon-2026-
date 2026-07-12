@@ -1,13 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
+import { fetchStats, fetchActivityLogs } from '../../lib/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [overdueVisible, setOverdueVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [stats, setStats] = useState({
+    availableAssets: 0,
+    allocatedAssets: 0,
+    maintenanceToday: 0,
+    activeBookings: 0,
+    pendingTransfers: 0,
+    overdueReturns: 0,
+    totalAssets: 0
+  });
+  const [activities, setActivities] = useState([]);
+
+  useEffect(() => {
+    fetchStats()
+      .then(data => {
+        setStats(data);
+        if (data.overdueReturns === 0) {
+          setOverdueVisible(false);
+        }
+      })
+      .catch(() => {
+        toast.error('Failed to load dashboard stats.');
+      });
+
+    fetchActivityLogs()
+      .then(data => {
+        const mapped = data.slice(0, 5).map((log, idx) => ({
+          id: log.id || idx,
+          title: `${log.module}: ${log.action}`,
+          desc: log.description,
+          time: new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          tag1: log.module,
+          tag2: log.action,
+          bg: 'bg-slate-100 text-slate-700'
+        }));
+        setActivities(mapped);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -17,12 +56,6 @@ export default function Dashboard() {
   };
 
   const user = localStorage.getItem('af_logged_in_user') || 'Admin';
-
-  const activities = [
-    { id: 1, title: 'Laptop AF-0114 allocated to Priya Shah', desc: 'Dept: IT Development | Serial: MAC-49201-B', time: '14 mins ago', tag1: 'Asset Transfer', tag2: 'Hardware', bg: 'bg-[#b3eee0]/40 text-[#00201b]' },
-    { id: 2, title: 'Room B2 booking confirmed', desc: 'Time: 2:00 PM to 3:00 PM | Purpose: Quarterly Review', time: '42 mins ago', tag1: 'Space Mgmt', tag2: 'Reserved', bg: 'bg-slate-100 text-slate-700' },
-    { id: 3, title: 'Projector AF-0062 maintenance resolved', desc: 'Status: Field Test Passed | Action: Bulb Replacement', time: '2 hours ago', tag1: 'Maintenance', tag2: 'Completed', bg: 'bg-emerald-50 text-emerald-800' }
-  ];
 
   return (
     <div className="flex min-h-screen bg-[#F9F9F7] font-sans antialiased text-[#1a1c1b]">
@@ -55,7 +88,7 @@ export default function Dashboard() {
                   +12% vs LY
                 </span>
               </div>
-              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">128</div>
+              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">{stats.availableAssets}</div>
               <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Available Assets</div>
               
               {/* Vertical columns sparkline */}
@@ -78,7 +111,7 @@ export default function Dashboard() {
                   Stable
                 </span>
               </div>
-              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">76</div>
+              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">{stats.allocatedAssets}</div>
               <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Allocated Assets</div>
               
               {/* Vertical columns sparkline */}
@@ -91,18 +124,18 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Card 3: Rooms */}
+            {/* Card 3: Maintenance */}
             <div className="bg-white border border-[#bfc9c5]/50 p-6 rounded-2xl shadow-xs hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-2.5 bg-[#2b2f2e]/10 rounded-xl flex-shrink-0">
-                  <span className="material-symbols-outlined text-[#2b2f2e] text-lg">meeting_room</span>
+                  <span className="material-symbols-outlined text-[#2b2f2e] text-lg">construction</span>
                 </div>
                 <span className="text-[9px] font-extrabold text-[#93000a] bg-[#ffdad6] px-2 py-0.5 rounded-full border border-[#93000a]/10 uppercase">
-                  -2 from AM
+                  Active
                 </span>
               </div>
-              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">4</div>
-              <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Available Rooms</div>
+              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">{stats.maintenanceToday}</div>
+              <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Under Maintenance</div>
               
               {/* Vertical columns sparkline */}
               <div className="mt-5 h-10 w-full flex items-end gap-1 px-1">
@@ -119,9 +152,9 @@ export default function Dashboard() {
           {/* Secondary stats row */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { val: '9', label: 'Active Bookings', icon: 'calendar_today', color: 'text-[#00352d]', bg: 'bg-[#b3eee0]/40' },
-              { val: '3', label: 'Pending Transfers', icon: 'sync_alt', color: 'text-[#59605f]', bg: 'bg-[#dbe1e0]/40' },
-              { val: '12', label: 'Upcoming Returns', icon: 'assignment_return', color: 'text-[#ba1a1a]', bg: 'bg-[#ffdad6]/40' },
+              { val: stats.activeBookings, label: 'Active Bookings', icon: 'calendar_today', color: 'text-[#00352d]', bg: 'bg-[#b3eee0]/40' },
+              { val: stats.pendingTransfers, label: 'Pending Transfers', icon: 'sync_alt', color: 'text-[#59605f]', bg: 'bg-[#dbe1e0]/40' },
+              { val: stats.overdueReturns, label: 'Overdue Returns', icon: 'assignment_return', color: 'text-[#ba1a1a]', bg: 'bg-[#ffdad6]/40' },
             ].map(sec => (
               <div key={sec.label} className="bg-[#f4f4f1]/50 p-4.5 rounded-2xl flex items-center gap-4 border border-[#bfc9c5]/30">
                 <div className={`w-11 h-11 rounded-full ${sec.bg} flex items-center justify-center shadow-xs flex-shrink-0`}>
@@ -141,7 +174,7 @@ export default function Dashboard() {
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-[#ba1a1a] text-lg font-bold">warning</span>
                 <span className="text-xs font-bold text-[#93000a] leading-normal">
-                  3 assets overdue for return - flagged for automated follow-up.
+                  {stats.overdueReturns} assets overdue for return - flagged for automated follow-up.
                 </span>
               </div>
               
