@@ -3,286 +3,420 @@ import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
 
 const INITIAL_TICKETS = [
-  { id: 'AF-0062', title: 'Projector bulb', desc: 'not turning on', status: 'Pending', type: 'electronics', priority: 'High' },
-  { id: 'AF-003', title: 'ac unit', desc: 'noisy compressor', status: 'Approved', type: 'hvac', priority: 'Medium' },
-  { id: 'AF-0078', title: 'Forklift', desc: 'tech: R varma', status: 'Technician Assigned', type: 'mechanical', priority: 'High' },
-  { id: 'AF-897', title: 'Printer Jam', desc: 'parts ordered', status: 'In Progress', type: 'electronics', priority: 'Low' },
-  { id: 'AF-873', title: 'Chair repair', desc: 'resolved 7 Jul', status: 'Resolved', type: 'furniture', priority: 'Low' },
+  { id: 'AF-0062', title: 'Projector bulb not turning on', desc: 'Main briefing hall projector bulb fails to ignite. Spare bulb in supply cabinet.', status: 'Pending', priority: 'High', time: 'Reported 2h ago', assignee: '' },
+  { id: 'AF-0031', title: 'AC unit noisy compressor', desc: 'Server room intake HVAC is experiencing heavy vibrations. Inspection approved.', status: 'Approved', priority: 'Medium', time: 'Approved by M. Chen', assignee: '' },
+  { id: 'AF-0078', title: 'Forklift Steering Calibration', desc: 'Hydraulic leak checked. Needs mechanical realignment.', status: 'Assigned', priority: 'High', time: 'Assigned 4h ago', assignee: 'R. Varma' },
+  { id: 'AF-0897', title: 'IT Printer Jam', desc: 'Department network printer needs roller replacement.', status: 'In Progress', priority: 'Low', time: 'Parts ordered', progress: 60, assignee: 'Tech Team' },
+  { id: 'AF-0873', title: 'Chair repair', desc: 'Conference chair hydraulic cylinder replaced.', status: 'Resolved', priority: 'Routine', time: 'resolved 7 Jul', assignee: 'S. Gupta' },
+  { id: 'AF-0112', title: 'Desk 12 Leg Stabilization', desc: 'Standing desk height locking pins realigned.', status: 'Resolved', priority: 'Routine', time: 'resolved 5 Jul', assignee: 'J. Wilson' },
 ];
-
-const COLUMNS = ['Pending', 'Approved', 'Technician Assigned', 'In Progress', 'Resolved'];
 
 export default function Maintenance() {
   const [tickets, setTickets] = useState(INITIAL_TICKETS);
-  const [search, setSearch] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newAssetId, setNewAssetId] = useState('');
-  const [newTitle, setNewTitle] = useState('');
-  const [newDesc, setNewDesc] = useState('');
-  const [newPriority, setNewPriority] = useState('Medium');
-  const [newType, setNewType] = useState('mechanical');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('All');
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ title: '', id: '', desc: '', status: 'Pending', priority: 'High', assignee: '' });
+  const [aiQuery, setAiQuery] = useState('');
 
-  // Move tickets across column states
-  const moveTicket = (id, currentStatus) => {
-    const currentIndex = COLUMNS.indexOf(currentStatus);
-    if (currentIndex === -1 || currentIndex === COLUMNS.length - 1) return;
-    
-    const nextStatus = COLUMNS[currentIndex + 1];
-    setTickets(prev => prev.map(t => {
-      if (t.id === id) {
-        if (nextStatus === 'Approved') {
-          toast.success(`Approved! ${t.id} moved to maintenance queue.`);
-        } else if (nextStatus === 'Resolved') {
-          toast.success(`Resolved! ${t.id} is now available again.`);
-        }
-        return { ...t, status: nextStatus };
-      }
-      return t;
-    }));
+  const handleAiSend = (e) => {
+    e.preventDefault();
+    if (!aiQuery.trim()) return;
+    toast.loading('Analyzing maintenance logs baseline…', { id: 'ai' });
+    setTimeout(() => {
+      toast.success('Lumina AI: Maintenance resolution is at 94% optimal levels.', { id: 'ai', duration: 4000 });
+      setAiQuery('');
+    }, 1200);
   };
 
-  const handleAddRequest = (e) => {
+  const handleCreate = (e) => {
     e.preventDefault();
-    if (!newAssetId.trim() || !newTitle.trim() || !newDesc.trim()) {
-      toast.error('Please fill in all fields');
+    if (!form.title || !form.id) {
+      toast.error('Title and Asset ID are required');
       return;
     }
-    const newTicket = {
-      id: newAssetId.toUpperCase(),
-      title: newTitle,
-      desc: newDesc,
-      status: 'Pending',
-      type: newType,
-      priority: newPriority
-    };
-    setTickets(prev => [newTicket, ...prev]);
-    setShowAddModal(false);
-    setNewAssetId('');
-    setNewTitle('');
-    setNewDesc('');
-    toast.success('Maintenance request submitted successfully');
+    setTickets(prev => [...prev, {
+      ...form,
+      time: 'Reported just now'
+    }]);
+    toast.success(`Service ticket raised for ${form.id}!`);
+    setForm({ title: '', id: '', desc: '', status: 'Pending', priority: 'High', assignee: '' });
+    setShowModal(false);
   };
 
-  const filteredTickets = tickets.filter(t => 
-    t.title.toLowerCase().includes(search.toLowerCase()) ||
-    t.id.toLowerCase().includes(search.toLowerCase()) ||
-    t.desc.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = tickets.filter(t => {
+    const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          t.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (t.desc && t.desc.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesPriority = priorityFilter === 'All' || t.priority === priorityFilter;
+    return matchesSearch && matchesPriority;
+  });
+
+  const getColCount = (status) => filtered.filter(t => t.status === status).length;
 
   return (
-    <div className="flex min-h-screen bg-gray-50/50 font-sans">
+    <div className="flex min-h-screen bg-[#F9F9F7] font-sans antialiased text-[#1a1c1b]">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-100 px-8 py-5 sticky top-0 z-40 shadow-sm flex items-center justify-between">
-          <div className="pl-10 md:pl-0">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Maintenance Management</h1>
-            <p className="text-xs text-gray-500 mt-1">Approval workflows, technician scheduling, and Kanban boards</p>
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        
+        {/* Top App Bar */}
+        <header className="sticky top-0 z-40 h-16 bg-[#F9F9F7]/80 backdrop-blur-md border-b border-[#bfc9c5]/30 flex items-center justify-between px-8 w-full">
+          <div className="flex items-center gap-4 flex-1 max-w-2xl">
+            <div className="relative w-full">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-450 text-base">search</span>
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search maintenance tickets, assets, or technicians..." 
+                className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-xl pl-9 pr-4 py-2 text-xs focus:ring-2 focus:ring-[#00352d]/10 focus:border-[#00352d] transition-all outline-none text-[#1a1c1b]"
+              />
+            </div>
           </div>
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm shadow-indigo-100 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[16px] font-bold">add</span> Request Maintenance
-          </button>
+          
+          <div className="flex items-center gap-4 ml-8">
+            <button className="p-2 rounded-full hover:bg-slate-100 text-[#404946] relative">
+              <span className="material-symbols-outlined text-lg">notifications</span>
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#ba1a1a] rounded-full border border-white"></span>
+            </button>
+            <button className="p-2 rounded-full hover:bg-slate-100 text-[#404946]">
+              <span className="material-symbols-outlined text-lg">settings</span>
+            </button>
+            <div className="h-6 w-px bg-[#bfc9c5]/50 mx-1"></div>
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-xs text-slate-800 font-bold leading-none">James Wilson</p>
+                <p className="text-[9px] text-[#404946] leading-none mt-1">Fleet Manager</p>
+              </div>
+              <img 
+                className="w-8.5 h-8.5 rounded-full border border-outline-variant object-cover" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOg2kjc3RP1RHpIJLoMNQ8zpI82u1RzYU3GuZMPTlpWsvjpJNjiifzuqrJgzWmf5gfYfLmCF23KahZ3pKLRGSLv9L7HcOc95yWPcfrO0_L_3QAU5mk2laTuB2mmWuQkUbcO8GZf5lerqQZc5DArBmZL3DW_GyuzSkGKp84jn5rhhFuwCxlzLNnbOEPEcvZBP-9Q2Her2lk6GmhciP9gvZGnGuE2HK-GrzM_6Q9EYPJlp7o1akU2YDx" 
+                alt="James Wilson" 
+              />
+            </div>
+          </div>
         </header>
 
-        <div className="p-8 flex flex-col h-[calc(100vh-80px)] overflow-hidden">
-          {/* Filters Area */}
-          <div className="flex items-center gap-3 mb-6 flex-shrink-0">
-            <div className="relative w-80">
-              <input 
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Filter cards..."
-                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-all bg-white"
-              />
-              <span className="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-sm pointer-events-none">search</span>
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-8 text-left pb-24 scrollbar-thin scrollbar-thumb-slate-200">
+          
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+            <div>
+              <nav className="flex items-center gap-1.5 text-xs text-[#404946] mb-2 font-semibold">
+                <span>Main</span>
+                <span className="material-symbols-outlined text-[12px]">chevron_right</span>
+                <span className="text-[#00352d] font-bold">Maintenance Management</span>
+              </nav>
+              <h2 className="text-2xl font-black text-[#00352d] leading-tight">Maintenance Workflow</h2>
+              <p className="text-xs text-slate-400 font-semibold mt-1">Track and manage asset health and service lifecycles across the organization.</p>
             </div>
-          </div>
-
-          {/* Kanban Board Container */}
-          <div className="flex-1 overflow-x-auto flex gap-5 pb-4 items-stretch select-none">
-            {COLUMNS.map(col => {
-              const colTickets = filteredTickets.filter(t => t.status === col);
-              return (
-                <div 
-                  key={col} 
-                  className="w-72 bg-gray-100/50 rounded-2xl border border-gray-200/40 p-4 flex flex-col flex-shrink-0"
-                >
-                  {/* Column Title Header */}
-                  <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                    <h3 className="text-xs font-bold text-gray-800 tracking-wide uppercase">{col}</h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-gray-200/60 text-gray-600 rounded-full">
-                      {colTickets.length}
-                    </span>
-                  </div>
-
-                  {/* Column Body Cards */}
-                  <div className="flex-1 overflow-y-auto space-y-3.5 pr-1.5 scrollbar-thin scrollbar-thumb-gray-200">
-                    {colTickets.length === 0 ? (
-                      <div className="h-28 border border-dashed border-gray-200 rounded-xl flex items-center justify-center text-xs text-gray-400 font-medium">
-                        Empty column
-                      </div>
-                    ) : (
-                      colTickets.map(t => (
-                        <div 
-                          key={t.id}
-                          className={`border rounded-xl p-4.5 text-left transition-all hover:-translate-y-0.5 shadow-sm hover:shadow-md ${
-                            t.status === 'Resolved' 
-                              ? 'bg-green-50/60 border-green-200 text-green-900 shadow-green-50/20' 
-                              : 'bg-white border-gray-100 text-gray-800 shadow-gray-50'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start gap-2 mb-2">
-                            <span className="text-[9px] font-bold text-gray-400 font-mono tracking-wider uppercase">
-                              {t.id}
-                            </span>
-                            <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-md uppercase ${
-                              t.priority === 'High' 
-                                ? 'bg-red-50 text-red-600 border border-red-100' 
-                                : t.priority === 'Medium' 
-                                  ? 'bg-orange-50 text-orange-600 border border-orange-100'
-                                  : 'bg-green-50 text-green-600 border border-green-100'
-                            }`}>
-                              {t.priority}
-                            </span>
-                          </div>
-
-                          <h4 className="text-sm font-bold truncate tracking-tight">{t.title}</h4>
-                          <p className="text-xs mt-1 text-gray-500 leading-relaxed min-h-[32px]">
-                            {t.desc}
-                          </p>
-
-                          <div className="mt-4 pt-3 border-t border-gray-100/60 flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full capitalize">
-                              {t.type}
-                            </span>
-                            {/* Column action control */}
-                            {col !== 'Resolved' && (
-                              <button 
-                                onClick={() => moveTicket(t.id, col)}
-                                className="p-1 rounded-lg bg-gray-50 hover:bg-indigo-50 border border-gray-100 hover:border-indigo-200 text-gray-500 hover:text-indigo-600 transition-all flex items-center justify-center cursor-pointer"
-                              >
-                                <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Kanban Info Footer note */}
-          <div className="mt-3 text-left py-2 border-t border-gray-100 flex-shrink-0">
-            <p className="text-[10px] text-gray-400 font-medium italic">
-              * Approving a card moves the asset to under maintenance; resolving returns it to available. Click arrow keys on cards to transition states.
-            </p>
-          </div>
-        </div>
-      </main>
-
-      {/* Add Request Dialog Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onClick={() => setShowAddModal(false)} />
-          <form 
-            onSubmit={handleAddRequest} 
-            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative z-10 border border-gray-100 p-6 text-left animate-slide-in"
-          >
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="text-base font-extrabold text-gray-900 tracking-tight">Request Maintenance</h3>
-              <button type="button" onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600">
-                <span className="material-symbols-outlined text-lg">close</span>
+            
+            <div className="flex gap-2 shrink-0">
+              <button 
+                onClick={() => setPriorityFilter('All')}
+                className="flex items-center gap-1 px-4 py-2.5 bg-white border border-[#bfc9c5]/40 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">filter_list</span>
+                Priority: {priorityFilter}
+              </button>
+              <button 
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-1.5 bg-[#00352d] hover:bg-[#0d4d43] text-white px-5 py-3 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">add</span>
+                Raise Ticket
               </button>
             </div>
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Asset ID *</label>
-                <input 
-                  value={newAssetId} 
-                  onChange={e => setNewAssetId(e.target.value)} 
-                  placeholder="e.g. AF-0062" 
-                  autoFocus 
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 bg-white"
-                />
+          {/* Quick Filters */}
+          <div className="mb-8 flex flex-wrap gap-2">
+            {['All', 'Low', 'Medium', 'High', 'Urgent'].map(p => (
+              <button 
+                key={p}
+                onClick={() => setPriorityFilter(p)}
+                className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-full border transition-all cursor-pointer ${
+                  priorityFilter === p 
+                    ? 'bg-[#0d4d43] border-[#0d4d43] text-white' 
+                    : 'bg-white border-[#bfc9c5]/40 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          {/* Kanban Board Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+            
+            {/* Column: Pending */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  Pending 
+                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('Pending')}</span>
+                </h3>
+              </div>
+              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
+                {filtered.filter(t => t.status === 'Pending').map(t => (
+                  <div key={t.id} className="bg-white border border-[#bfc9c5]/40 p-4 rounded-xl shadow-xs hover:border-[#00352d]/45 transition-all cursor-pointer group">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-[9px] font-black text-[#00352d] bg-[#b3eee0]/40 px-2 py-0.5 rounded">{t.id}</span>
+                      {t.priority === 'High' && <span className="material-symbols-outlined text-[#ba1a1a] text-lg font-bold">priority_high</span>}
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00352d] transition-colors">{t.title}</h4>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-3 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">schedule</span> {t.time}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Column: Approved */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  Approved 
+                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('Approved')}</span>
+                </h3>
+              </div>
+              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
+                {filtered.filter(t => t.status === 'Approved').map(t => (
+                  <div key={t.id} className="bg-white border border-[#bfc9c5]/40 p-4 rounded-xl shadow-xs hover:border-[#00352d]/45 transition-all cursor-pointer group">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-[9px] font-black text-[#00352d] bg-[#b3eee0]/40 px-2 py-0.5 rounded">{t.id}</span>
+                      <span className="material-symbols-outlined text-slate-400 text-base">info</span>
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00352d] transition-colors">{t.title}</h4>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-3 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">person</span> Approved by M. Chen
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Column: Assigned */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  Assigned 
+                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('Assigned')}</span>
+                </h3>
+              </div>
+              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
+                {filtered.filter(t => t.status === 'Assigned').map(t => (
+                  <div key={t.id} className="bg-white border border-[#bfc9c5]/40 p-4 rounded-xl shadow-xs hover:border-[#00352d]/45 transition-all cursor-pointer group">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-[9px] font-black text-[#00352d] bg-[#b3eee0]/40 px-2 py-0.5 rounded">{t.id}</span>
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00352d] transition-colors">{t.title}</h4>
+                    <div className="mt-4 flex items-center gap-2 p-2 bg-[#f4f4f1] rounded-xl border border-[#bfc9c5]/30">
+                      <div className="w-5.5 h-5.5 rounded-full bg-[#0d4d43] text-white text-[8px] flex items-center justify-center font-bold">
+                        {t.assignee[0]}
+                      </div>
+                      <span className="text-[10px] text-slate-600 font-bold">Tech: {t.assignee}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Column: In Progress */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  In Progress 
+                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('In Progress')}</span>
+                </h3>
+              </div>
+              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
+                {filtered.filter(t => t.status === 'In Progress').map(t => (
+                  <div key={t.id} className="bg-white border border-[#bfc9c5]/40 p-4 rounded-xl shadow-xs hover:border-[#00352d]/45 transition-all cursor-pointer group">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-[9px] font-black text-[#00352d] bg-[#b3eee0]/40 px-2 py-0.5 rounded">{t.id}</span>
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00352d] transition-colors">{t.title}</h4>
+                    <div className="mt-3.5 space-y-1">
+                      <div className="flex justify-between text-[9px] font-bold text-slate-400">
+                        <span className="italic">{t.time}</span>
+                        <span>{t.progress}%</span>
+                      </div>
+                      <div className="h-1 bg-[#f4f4f1] rounded-full overflow-hidden border border-slate-200/50">
+                        <div className="h-full bg-[#00352d]" style={{ width: `${t.progress}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Column: Resolved */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  Resolved 
+                  <span className="text-[10px] bg-[#eeeeec] px-2 py-0.5 rounded-full text-slate-500 font-bold">{getColCount('Resolved')}</span>
+                </h3>
+              </div>
+              <div className="flex flex-col gap-3 p-3 bg-white/40 border border-[#bfc9c5]/30 rounded-2xl min-h-[350px]">
+                {filtered.filter(t => t.status === 'Resolved').map(t => {
+                  const isChair = t.title === 'Chair repair';
+                  return (
+                    <div 
+                      key={t.id} 
+                      className={`p-4 rounded-xl shadow-xs transition-all cursor-pointer border ${
+                        isChair 
+                          ? 'bg-[#0d4d43] border-[#0d4d43] text-white hover:brightness-105' 
+                          : 'bg-white border-[#bfc9c5]/35 opacity-65 grayscale hover:grayscale-0 hover:opacity-100'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded ${isChair ? 'bg-white/10 text-white' : 'bg-[#b3eee0]/40 text-[#00352d]'}`}>{t.id}</span>
+                        <span className={`material-symbols-outlined text-base ${isChair ? 'text-[#83bdb0]' : 'text-slate-400'}`} style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      </div>
+                      <h4 className={`text-xs font-bold ${isChair ? 'text-white' : 'text-slate-800'}`}>{t.title}</h4>
+                      <p className={`text-[9px] font-semibold mt-3 ${isChair ? 'text-[#83bdb0]' : 'text-slate-400'}`}>{t.time}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Centered Pill Info Footer */}
+          <footer className="mt-12 flex items-center justify-center">
+            <div className="flex items-center gap-2 px-6 py-3 bg-[#f4f4f1] rounded-full border border-[#bfc9c5]/40 text-xs text-slate-500 font-semibold shadow-xs">
+              <span className="material-symbols-outlined text-[#00352d] text-base">info</span>
+              <span>Approving a card moves the asset to under maintenance, resolving returns it to available.</span>
+            </div>
+          </footer>
+
+        </div>
+
+        {/* AI chat assistant prompt */}
+        <div className="fixed bottom-6 right-6 z-50 w-80 md:w-96">
+          <form 
+            onSubmit={handleAiSend}
+            className="bg-white border border-[#bfc9c5]/50 p-2 rounded-2xl flex items-center gap-3 shadow-xl transition-all duration-300"
+          >
+            <div className="w-8.5 h-8.5 rounded-xl bg-[#00352d] text-white flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-sm">smart_toy</span>
+            </div>
+            <input 
+              className="bg-transparent border-none outline-none focus:ring-0 text-xs text-slate-800 placeholder-slate-400 flex-1 px-1 py-1" 
+              placeholder="Ask AI about maintenance tasks..." 
+              type="text"
+              value={aiQuery}
+              onChange={e => setAiQuery(e.target.value)}
+            />
+            <button type="submit" className="p-1.5 hover:bg-slate-50 text-[#00352d] rounded-xl cursor-pointer flex shrink-0">
+              <span className="material-symbols-outlined text-base">send</span>
+            </button>
+          </form>
+        </div>
+
+      </main>
+
+      {/* Raise Ticket Modal Dialog */}
+      {showModal && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
+          onClick={() => setShowModal(false)}
+        >
+          <div 
+            className="bg-white border border-slate-100 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-6 text-left animate-slide-up"
+            onClick={e => e.stopPropagation()}
+          >
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">Raise Service Ticket</h3>
+              <p className="text-xs text-slate-400 font-semibold mt-1">Submit maintenance request to engineering pool</p>
+            </div>
+
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Asset ID Tag *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. AF-0062"
+                    value={form.id}
+                    onChange={e => setForm(p => ({ ...p, id: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Issue Title *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. Broken AC Compressor"
+                    value={form.title}
+                    onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Problem Area *</label>
-                <input 
-                  value={newTitle} 
-                  onChange={e => setNewTitle(e.target.value)} 
-                  placeholder="e.g. Projector bulb" 
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Description *</label>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Description</label>
                 <textarea 
-                  value={newDesc} 
-                  onChange={e => setNewDesc(e.target.value)} 
-                  placeholder="e.g. not turning on after power spike" 
-                  required
                   rows={3}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 bg-white resize-none"
+                  placeholder="Provide precise details of the anomaly..."
+                  value={form.desc}
+                  onChange={e => setForm(p => ({ ...p, desc: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30 resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Category</label>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Priority Level</label>
                   <select 
-                    value={newType} 
-                    onChange={e => setNewType(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 bg-white cursor-pointer"
-                  >
-                    <option value="electronics">Electronics</option>
-                    <option value="mechanical">Mechanical</option>
-                    <option value="hvac">HVAC</option>
-                    <option value="furniture">Furniture</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Priority</label>
-                  <select 
-                    value={newPriority} 
-                    onChange={e => setNewPriority(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 bg-white cursor-pointer"
+                    value={form.priority}
+                    onChange={e => setForm(p => ({ ...p, priority: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none bg-white cursor-pointer"
                   >
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Assignee Technician</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. R. Varma"
+                    value={form.assignee}
+                    onChange={e => setForm(p => ({ ...p, assignee: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="flex gap-3 justify-end mt-6">
-              <button 
-                type="button" 
-                onClick={() => setShowAddModal(false)} 
-                className="px-4.5 py-2.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit" 
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all active:scale-98 shadow-sm shadow-indigo-100"
-              >
-                Submit Request
-              </button>
-            </div>
-          </form>
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-[#00352d] hover:bg-[#0d4d43] text-white rounded-xl text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                >
+                  Submit Ticket
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

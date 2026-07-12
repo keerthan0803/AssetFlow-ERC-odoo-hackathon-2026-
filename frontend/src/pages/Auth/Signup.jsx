@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
-import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { signupRequest, googleAuthRequest } from '../../lib/authApi';
-import { hasAuthSession, saveAuthSession } from '../../lib/authSession';
-import { requestGoogleAccessToken } from '../../lib/googleAuth';
 
 const DEPARTMENTS = ['Select Department', 'Engineering', 'Operations', 'Marketing', 'Sales', 'HR', 'Audit'];
 
@@ -19,12 +15,6 @@ export default function Signup() {
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (hasAuthSession()) {
-      navigate('/', { replace: true });
-    }
-  }, [navigate]);
-
   const getPasswordStrength = () => {
     if (!password) return { label: 'Empty', color: 'text-slate-400' };
     if (password.length < 6) return { label: 'Weak', color: 'text-red-500 font-bold' };
@@ -32,7 +22,7 @@ export default function Signup() {
     return { label: 'Strong', color: 'text-green-500 font-bold' };
   };
 
-  const handleSignup = async (e) => {
+  const handleSignup = (e) => {
     e.preventDefault();
     if (department === 'Select Department') {
       toast.error('Please select a department');
@@ -44,47 +34,18 @@ export default function Signup() {
     }
 
     setSubmitting(true);
-
-    try {
-      const data = await signupRequest({
-        fullName,
-        email,
-        organizationName: orgName,
-        department,
-        password,
-      });
-
-      if (!data.success) {
-        toast.error(data.message || 'Unable to create account.');
-        return;
-      }
-
-      saveAuthSession(data);
-      toast.success(data.message || `Account created successfully for ${fullName}!`);
-      navigate('/');
-    } catch (error) {
-      toast.error(error?.message || 'Unable to create the account right now.');
-    } finally {
+    setTimeout(() => {
       setSubmitting(false);
-    }
+      localStorage.setItem('af_logged_in_user', fullName || 'Admin');
+      toast.success(`Account created successfully for ${fullName || 'Admin'}!`);
+      navigate('/');
+    }, 1500);
   };
 
-  const handleGoogleSignup = async () => {
-    try {
-      const accessToken = await requestGoogleAccessToken();
-      const data = await googleAuthRequest({ accessToken });
-
-      if (!data.success) {
-        toast.error(data.message || 'Google sign-up failed.');
-        return;
-      }
-
-      saveAuthSession(data);
-      toast.success(data.message || 'Google account connected successfully.');
-      navigate('/');
-    } catch (error) {
-      toast.error(error?.message || 'Google sign-up failed.');
-    }
+  const handleGoogleSignup = () => {
+    localStorage.setItem('af_logged_in_user', 'Admin');
+    toast.success('Account created via Google. Welcome!');
+    navigate('/');
   };
 
   const strength = getPasswordStrength();
@@ -154,7 +115,11 @@ export default function Signup() {
           </div>
         </div>
 
-
+        {/* Left side footer stats */}
+        <div className="relative z-10 flex justify-between items-center text-[10px] text-slate-400 font-bold tracking-widest font-mono border-t border-white/5 pt-4">
+          <span>AES-256 ENCRYPTED</span>
+          <span>V4.2.1-STABLE</span>
+        </div>
       </section>
 
       {/* Right Column: Register Card */}

@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { clearAuthSession, getAuthRole, getAuthUserName } from '../lib/authSession';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard',             path: '/',                          icon: 'dashboard' },
-  { label: 'Organization Setup',    path: '/organization/departments',   icon: 'corporate_fare' },
-  { label: 'Assets',                path: '/assets',                     icon: 'inventory_2' },
-  { label: 'Allocation & Transfer', path: '/allocation',               icon: 'swap_horiz' },
-  { label: 'Resource Booking',      path: '/booking',                    icon: 'event_available' },
-  { label: 'Maintenance',           path: '/maintenance',                icon: 'engineering' },
-  { label: 'Audit',                 path: '/audit',                      icon: 'gavel' },
-  { label: 'Reports',               path: '/reports',                    icon: 'bar_chart' },
-  { label: 'Notifications',         path: '/notifications',              icon: 'notifications' },
+  { label: 'Dashboard',             path: '/',                        icon: 'dashboard' },
+  { label: 'Organization Setup',    path: '/organization/departments', icon: 'corporate_fare' },
+  { label: 'Assets',                path: '/assets',                   icon: 'inventory_2' },
+  { label: 'Allocation & Transfer',  path: '/allocation',             icon: 'swap_horiz' },
+  { label: 'Resource Booking',      path: '/booking',                  icon: 'event_available' },
+  { label: 'Maintenance Center',     path: '/maintenance',              icon: 'engineering' },
+  { label: 'Audit & Compliance',     path: '/audit',                    icon: 'fact_check' },
+  { label: 'Reports & Analytics',    path: '/reports',                  icon: 'assessment' },
+  { label: 'Notifications',         path: '/notifications',            icon: 'notifications' },
 ];
 
 export default function Sidebar() {
@@ -21,39 +20,38 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
-    clearAuthSession();
-    toast.success('Logged out successfully');
+    localStorage.removeItem('af_logged_in_user');
+    toast.success('Successfully logged out.');
     navigate('/login');
   };
 
-  const user = getAuthUserName();
-  const role = getAuthRole();
-  const roleLabel = role === 'ADMIN' ? 'Administrator' : 'Employee';
+  const user = localStorage.getItem('af_logged_in_user') || 'Admin';
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white border-r border-gray-100 shadow-sm font-sans w-64">
+    <div className="flex flex-col h-full bg-white border-r border-[#bfc9c5]/60 shadow-xs font-sans w-64">
+      
       {/* Logo Header */}
-      <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+      <div className="p-6 border-b border-[#eeeeec] flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm flex-shrink-0 p-1">
+          <div className="w-10 h-10 rounded-xl bg-white border border-[#bfc9c5]/40 flex items-center justify-center shadow-xs flex-shrink-0 p-1">
             <img src="/logo.svg" className="w-full h-full object-contain" alt="AssetFlow Logo" />
           </div>
-          <div>
-            <div className="text-base font-extrabold text-gray-900 tracking-tight">AssetFlow</div>
-            <div className="text-[10px] text-gray-400 font-bold tracking-wider uppercase">Enterprise EAM</div>
+          <div className="text-left">
+            <div className="text-sm font-black text-[#00352d] tracking-tight">AssetFlow</div>
+            <div className="text-[10px] text-[#404946] opacity-70 font-bold uppercase tracking-wider">Enterprise EAM</div>
           </div>
         </div>
         {/* Close Button for mobile drawer */}
         <button 
           onClick={() => setIsOpen(false)}
-          className="md:hidden p-1.5 rounded-lg hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-colors"
+          className="md:hidden p-1.5 rounded-xl hover:bg-[#eeeeec] text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
         >
           <span className="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-1 px-4 py-6 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-gray-200">
+      <nav className="flex-1 px-3 py-5 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-slate-200">
         {NAV_ITEMS.map(item => {
           const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
           return (
@@ -61,72 +59,92 @@ export default function Sidebar() {
               key={item.path}
               to={item.path}
               onClick={() => setIsOpen(false)}
-              className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group ${
+              className={`flex items-center gap-4 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-150 group ${
                 isActive 
-                  ? 'bg-indigo-50/50 text-indigo-600 border-l-4 border-indigo-600' 
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent'
+                  ? 'bg-[#b3eee0] text-[#00201b] shadow-xs' 
+                  : 'text-[#404946] hover:bg-[#e8e8e6]/60 hover:text-[#1a1c1b]'
               }`}
             >
-              <span className={`material-symbols-outlined text-lg transition-transform duration-200 group-hover:scale-110 ${
-                isActive ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600'
+              <span className={`material-symbols-outlined text-[18px] ${
+                isActive ? 'text-[#00201b]' : 'text-slate-400 group-hover:text-slate-650'
               }`}>
                 {item.icon}
               </span>
-              <span>{item.label}</span>
+              <span className="leading-none">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* User Footer Profile */}
-      <div className="p-4 border-t border-gray-50 bg-gray-50/50">
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-100 shadow-sm">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-inner">
-            {user[0]?.toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-bold text-gray-900 truncate">{user}</div>
-            <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{roleLabel}</div>
-          </div>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="w-full mt-3 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50/50 transition-all border border-transparent hover:border-red-100/30"
+      {/* Profile and Action Footer */}
+      <div className="border-t border-[#eeeeec] p-4 space-y-3">
+        <button 
+          onClick={() => {
+            setIsOpen(false);
+            navigate('/assets');
+            toast.success('Registration console active.');
+          }}
+          className="w-full py-3.5 px-4 bg-[#00352d] hover:bg-[#0d4d43] text-white rounded-xl font-bold text-xs shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
         >
-          <span className="material-symbols-outlined text-sm">logout</span>
-          Sign Out
+          <span className="material-symbols-outlined text-base">add</span>
+          New Asset
         </button>
+
+        <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-2xl">
+          <div 
+            onClick={() => {
+              setIsOpen(false);
+              navigate('/profile');
+            }}
+            className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer hover:opacity-85"
+            title="View Profile"
+          >
+            <div className="w-8 h-8 rounded-full border border-[#bfc9c5]/30 overflow-hidden bg-gradient-to-tr from-[#00352d] to-[#0d4d43] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+              {user[0]?.toUpperCase() || 'A'}
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-xs font-bold text-slate-800 truncate leading-none">{user}</p>
+              <p className="text-[9px] text-[#404946] font-bold uppercase tracking-wider mt-1">Operator</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="material-symbols-outlined text-[#404946] hover:text-red-600 transition-colors cursor-pointer text-base"
+            title="Logout"
+          >
+            logout
+          </button>
+        </div>
       </div>
+
     </div>
   );
 
   return (
     <>
-      {/* Floating Hamburger menu on Mobile/Tablets */}
-      <div className="md:hidden fixed top-3 left-3 z-[60]">
+      {/* Mobile Header Trigger */}
+      <div className="md:hidden fixed top-4 left-4 z-45">
         <button
           onClick={() => setIsOpen(true)}
-          className="w-10 h-10 bg-white border border-gray-100 text-gray-700 rounded-xl shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
+          className="w-10 h-10 rounded-xl bg-white border border-[#bfc9c5]/30 shadow-xs flex items-center justify-center text-slate-650 hover:text-slate-900 cursor-pointer"
         >
-          <span className="material-symbols-outlined text-xl">menu</span>
+          <span className="material-symbols-outlined">menu</span>
         </button>
       </div>
 
-      {/* Desktop Sidebar Layout */}
-      <div className="hidden md:flex h-screen sticky top-0 flex-shrink-0 z-50">
+      {/* Desktop Fixed Left Panel */}
+      <div className="hidden md:block h-screen sticky top-0 flex-shrink-0 z-50">
         {sidebarContent}
       </div>
 
       {/* Mobile Drawer Overlay */}
       {isOpen && (
-        <div className="md:hidden fixed inset-0 z-[100] flex">
-          {/* Backdrop */}
+        <div className="md:hidden fixed inset-0 z-50 flex">
           <div 
-            className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
             onClick={() => setIsOpen(false)}
           />
-          {/* Menu Drawer */}
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-xl animate-slide-in">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full animate-fade-in">
             {sidebarContent}
           </div>
         </div>

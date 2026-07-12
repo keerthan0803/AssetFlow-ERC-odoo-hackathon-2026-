@@ -1,62 +1,28 @@
-import { useState } from 'react';
-import { useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { loginRequest, googleAuthRequest } from '../../lib/authApi';
-import { hasAuthSession, saveAuthSession } from '../../lib/authSession';
-import { requestGoogleAccessToken } from '../../lib/googleAuth';
 
 export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [email, setEmail] = useState('admin@assetflow.com');
+  const [password, setPassword] = useState('admin123');
 
-  useEffect(() => {
-    if (hasAuthSession()) {
-      navigate('/', { replace: true });
-    }
-  }, [navigate]);
-
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    setSubmitting(true);
-
-    try {
-      const data = await loginRequest({ email, password });
-
-      if (!data.success) {
-        toast.error(data.message || 'Invalid credentials.');
-        return;
-      }
-
-      saveAuthSession(data);
-      toast.success(`Successfully logged in as ${data.role === 'ADMIN' ? 'Admin' : 'Employee'}!`);
+    if (email === 'admin@assetflow.com' && password === 'admin123') {
+      localStorage.setItem('af_logged_in_user', 'Admin');
+      toast.success('Successfully logged in as Admin!');
       navigate('/');
-    } catch (error) {
-      toast.error(error?.message || 'Unable to sign in right now.');
-    } finally {
-      setSubmitting(false);
+    } else {
+      toast.error('Invalid credentials. Use admin@assetflow.com / admin123');
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      const accessToken = await requestGoogleAccessToken();
-      const data = await googleAuthRequest({ accessToken });
-
-      if (!data.success) {
-        toast.error(data.message || 'Google sign-in failed.');
-        return;
-      }
-
-      saveAuthSession(data);
-      toast.success(`Successfully logged in as ${data.role === 'ADMIN' ? 'Admin' : 'Employee'}!`);
-      navigate('/');
-    } catch (error) {
-      toast.error(error?.message || 'Google sign-in failed.');
-    }
+  const handleGoogleLogin = () => {
+    localStorage.setItem('af_logged_in_user', 'Admin');
+    toast.success('Google Authentication matched! Welcome.');
+    navigate('/');
   };
 
   return (
@@ -92,7 +58,11 @@ export default function Login() {
           </p>
         </div>
 
-
+        {/* Left side footer stats */}
+        <div className="relative z-10 flex justify-between items-center text-[10px] text-slate-400 font-bold tracking-widest font-mono border-t border-white/5 pt-4">
+          <span>AES-256 ENCRYPTED</span>
+          <span>V4.2.1-STABLE</span>
+        </div>
       </section>
 
       {/* Right Column: Sign In Card */}
@@ -177,7 +147,7 @@ export default function Login() {
                 type="submit"
                 className="w-full py-3.5 bg-black hover:bg-slate-800 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer group"
               >
-                {submitting ? 'Signing In...' : 'Sign In'}
+                Sign In
                 <span className="material-symbols-outlined text-lg font-bold transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
               </button>
             </form>

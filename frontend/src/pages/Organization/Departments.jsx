@@ -456,7 +456,7 @@ export default function Departments() {
             
             <div className="flex gap-4">
               <button 
-                onClick={() => toast.success('Redirecting to sustainability efficiency analysis ledger…')}
+                onClick={() => toast.success('Redirecting to department efficiency analysis ledger…')}
                 className="text-[#00352d] font-bold text-[9px] uppercase tracking-widest flex items-center gap-0.5 hover:underline cursor-pointer"
               >
                 View Efficiency Report
