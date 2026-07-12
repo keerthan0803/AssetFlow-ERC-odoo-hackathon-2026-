@@ -5,24 +5,49 @@ import toast from 'react-hot-toast';
 export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('admin@assetflow.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email === 'admin@assetflow.com' && password === 'admin123') {
-      localStorage.setItem('af_logged_in_user', 'Admin');
-      toast.success('Successfully logged in as Admin!');
+    try {
+      const { loginRequest } = await import('../../lib/authApi');
+      const data = await loginRequest({ email, password });
+
+      if (!data.success) {
+        toast.error(data.message || 'Invalid credentials.');
+        return;
+      }
+
+      const { saveAuthSession } = await import('../../lib/authSession');
+      saveAuthSession(data);
+      toast.success(data.message || 'Login successful!');
       navigate('/');
-    } else {
-      toast.error('Invalid credentials. Use admin@assetflow.com / admin123');
+    } catch (error) {
+      toast.error(error?.message || 'Login failed. Please try again.');
     }
   };
 
-  const handleGoogleLogin = () => {
-    localStorage.setItem('af_logged_in_user', 'Admin');
-    toast.success('Google Authentication matched! Welcome.');
-    navigate('/');
+  const handleGoogleLogin = async () => {
+    try {
+      const { requestGoogleAccessToken } = await import('../../lib/googleAuth');
+      const { googleAuthRequest } = await import('../../lib/authApi');
+      const { saveAuthSession } = await import('../../lib/authSession');
+
+      const accessToken = await requestGoogleAccessToken();
+      const data = await googleAuthRequest({ accessToken });
+
+      if (!data.success) {
+        toast.error(data.message || 'Google sign-in failed.');
+        return;
+      }
+
+      saveAuthSession(data);
+      toast.success(data.message || 'Google sign-in successful!');
+      navigate('/');
+    } catch (error) {
+      toast.error(error?.message || 'Google sign-in failed.');
+    }
   };
 
   return (
