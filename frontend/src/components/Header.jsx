@@ -14,13 +14,11 @@ export default function Header({ title, showSearch = true, searchQuery = "", set
   ]);
 
   const [userName, setUserName] = useState(() => localStorage.getItem('af_logged_in_user') || 'Sarah Chen');
-  const [profilePic, setProfilePic] = useState(() => localStorage.getItem('af_profile_pic') || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgA3en19Uc7ea6GxtX8VkAnlCbYVILldz29L747iD6rROHoLP92Oisl35Hbg1lw_wYabI96c677WjZ3pZLrKA2dOUsspcz6n9SH-lbiBVk_V0hcW65ECc9z_DtENK2mRrug1Rb3oVobEPNapqcghbzZO2hU8hkzKWipVZHAnJT4C8qyJB7BU4MUsi_D1-KQTy0ITT1ExoLO7g7NWLAuuYCYQEBxuXAxUljrAtVBqk2bC385UcW');
   const [userRole, setUserRole] = useState(() => localStorage.getItem('af_user_role') || 'Ops Manager');
 
   useEffect(() => {
     const handleStorageChange = () => {
       setUserName(localStorage.getItem('af_logged_in_user') || 'Sarah Chen');
-      setProfilePic(localStorage.getItem('af_profile_pic') || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgA3en19Uc7ea6GxtX8VkAnlCbYVILldz29L747iD6rROHoLP92Oisl35Hbg1lw_wYabI96c677WjZ3pZLrKA2dOUsspcz6n9SH-lbiBVk_V0hcW65ECc9z_DtENK2mRrug1Rb3oVobEPNapqcghbzZO2hU8hkzKWipVZHAnJT4C8qyJB7BU4MUsi_D1-KQTy0ITT1ExoLO7g7NWLAuuYCYQEBxuXAxUljrAtVBqk2bC385UcW');
       setUserRole(localStorage.getItem('af_user_role') || 'Ops Manager');
     };
     window.addEventListener('storage', handleStorageChange);
@@ -159,11 +157,9 @@ export default function Header({ title, showSearch = true, searchQuery = "", set
             <p className="text-xs text-slate-800 font-bold leading-none">{userName}</p>
             <p className="text-[9px] text-[#404946] leading-none mt-1">{userRole.replace('_', ' ')}</p>
           </div>
-          <img 
-            className="w-8 h-8 rounded-full object-cover border border-[#bfc9c5]/35 group-hover:opacity-90" 
-            src={profilePic} 
-            alt="User Profile" 
-          />
+          <div className="w-8 h-8 rounded-full bg-[#00352d] text-white flex items-center justify-center font-bold text-xs border border-[#bfc9c5]/35">
+            {userName[0]?.toUpperCase() || 'U'}
+          </div>
         </div>
       </div>
     </header>
