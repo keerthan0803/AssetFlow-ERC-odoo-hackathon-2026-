@@ -223,43 +223,6 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* API and Integration Keys */}
-                <div className="bg-white border border-[#bfc9c5]/40 rounded-2xl p-6 shadow-xs space-y-4">
-                  <h3 className="text-xs font-black uppercase text-[#00352d] tracking-wider flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base">vpn_key</span>
-                    API & Integration Credentials
-                  </h3>
-                  <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
-                    Use these secret keys to authenticate with external third-party inventory managers, reporting platforms, or custom scripts.
-                  </p>
-
-                  <div className="flex gap-2 items-center">
-                    <div className="relative flex-1">
-                      <input 
-                        type={isKeyVisible ? 'text' : 'password'} 
-                        value={apiKey} 
-                        readOnly
-                        className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/40 rounded-xl px-4 py-2.5 text-xs font-mono text-slate-800 focus:outline-none"
-                      />
-                      <button 
-                        onClick={() => setIsKeyVisible(!isKeyVisible)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-450 hover:text-slate-700 cursor-pointer"
-                        title={isKeyVisible ? 'Hide token' : 'Show token'}
-                      >
-                        <span className="material-symbols-outlined text-base">
-                          {isKeyVisible ? 'visibility_off' : 'visibility'}
-                        </span>
-                      </button>
-                    </div>
-
-                    <button 
-                      onClick={handleGenerateKey}
-                      className="px-4 py-2.5 bg-[#00352d] hover:bg-[#0d4d43] text-white font-bold rounded-xl text-xs whitespace-nowrap cursor-pointer"
-                    >
-                      Regenerate Key
-                    </button>
-                  </div>
-                </div>
 
               </div>
 
