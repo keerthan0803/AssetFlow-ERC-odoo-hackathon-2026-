@@ -18,6 +18,10 @@ import Departments from './pages/Organization/Departments';
 import Sustainability from './pages/Sustainability/Sustainability';
 import Maintenance from './pages/Maintenance/Maintenance';
 import Booking from './pages/Booking/Booking';
+import Allocation from './pages/Allocation/Allocation';
+import Audit from './pages/Audit/Audit';
+import Reports from './pages/Reports/Reports';
+import Notifications from './pages/Notifications/Notifications';
 
 export default function App() {
   return (
@@ -62,6 +66,18 @@ export default function App() {
 
         {/* Booking & Reservations */}
         <Route path="/booking" element={<Booking />} />
+
+        {/* Allocation & Transfer */}
+        <Route path="/allocation" element={<Allocation />} />
+
+        {/* Asset Audit */}
+        <Route path="/audit" element={<Audit />} />
+
+        {/* Reports & Analytics */}
+        <Route path="/reports" element={<Reports />} />
+
+        {/* Notifications */}
+        <Route path="/notifications" element={<Notifications />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
