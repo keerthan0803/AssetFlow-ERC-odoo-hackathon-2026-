@@ -14,25 +14,33 @@ const monthName = MONTHS[today.getMonth()];
 const generateSlots = (resource) => {
   const base = {
     'Conference Room B2': [
-      { time: '9:00',  label: 'Booked — Procurement Team — 9 to 10',             type: 'booked' },
-      { time: '10:00', label: 'Requested 9:30 to 10:30 — conflict — slot is unavailable', type: 'conflict' },
+      { time: '09:00', label: 'Booked — Procurement Team Sync — 9 to 10', type: 'booked' },
+      { time: '10:00', label: 'Overlapping request 9:30 to 10:30 — scheduling conflict detected', type: 'conflict' },
       { time: '11:00', label: '', type: 'available' },
       { time: '12:00', label: '', type: 'available' },
-      { time: '1:00',  label: '', type: 'available' },
-      { time: '2:00',  label: 'Booked — HR Onboarding — 2 to 3',                 type: 'booked' },
-      { time: '3:00',  label: '', type: 'available' },
+      { time: '13:00', label: '', type: 'available' },
+      { time: '14:00', label: 'Booked — Employee Onboarding Session — 2 to 3', type: 'booked' },
+      { time: '15:00', label: '', type: 'available' },
     ],
     'Conference Room A1': [
-      { time: '9:00',  label: '', type: 'available' },
-      { time: '10:00', label: 'Booked — Engineering Sync — 10 to 11',            type: 'booked' },
+      { time: '09:00', label: '', type: 'available' },
+      { time: '10:00', label: 'Booked — Engineering Sync — 10 to 11', type: 'booked' },
       { time: '11:00', label: '', type: 'available' },
-      { time: '12:00', label: 'Booked — Leadership Meeting — 12 to 2',           type: 'booked' },
-      { time: '1:00',  label: '', type: 'available' },
-      { time: '2:00',  label: '', type: 'available' },
-      { time: '3:00',  label: '', type: 'available' },
+      { time: '12:00', label: 'Booked — Executive Leadership Meeting — 12 to 2', type: 'booked' },
+      { time: '13:00', label: '', type: 'available' },
+      { time: '14:00', label: '', type: 'available' },
+      { time: '15:00', label: '', type: 'available' },
     ],
   };
-  return base[resource] || DAYS.map((_, i) => ({ time: `${9+i}:00`, label: '', type: 'available' }));
+  return base[resource] || [
+    { time: '09:00', label: '', type: 'available' },
+    { time: '10:00', label: '', type: 'available' },
+    { time: '11:00', label: '', type: 'available' },
+    { time: '12:00', label: '', type: 'available' },
+    { time: '13:00', label: '', type: 'available' },
+    { time: '14:00', label: '', type: 'available' },
+    { time: '15:00', label: '', type: 'available' },
+  ];
 };
 
 export default function Booking() {
@@ -47,117 +55,90 @@ export default function Booking() {
   const slots = generateSlots(selectedResource);
   const availableSlots = slots.filter(s => s.type === 'available');
 
-  const handleResourceSelect = (r) => { 
-    setSelectedResource(r); 
-    setResourceInput(`${r} — ${selectedDay}, ${dayNum} ${monthName}`); 
-    setShowResourceDrop(false); 
+  const handleResourceSelect = (r) => {
+    setSelectedResource(r);
+    setResourceInput(`${r} — ${selectedDay}, ${dayNum} ${monthName}`);
+    setShowResourceDrop(false);
   };
 
   const handleSlotClick = (slot) => {
     if (slot.type === 'booked') { 
-      toast.error('Slot already booked'); 
+      toast.error('This slot is already booked'); 
       return; 
     }
     if (slot.type === 'conflict') { 
-      toast.error('Slot has a conflict'); 
+      toast.error('This slot has a conflict check warning'); 
       return; 
     }
-    setBookingSlot(slot.time); 
+    setBookingSlot(slot.time);
     setShowBookModal(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = (e) => {
+    e.preventDefault();
     if (!bookingTitle.trim()) { 
       toast.error('Please enter a meeting title'); 
       return; 
     }
-    toast.success(`Booked ${bookingSlot} in ${selectedResource} for "${bookingTitle}"`);
-    setShowBookModal(false); 
+    toast.success(`Reserved ${bookingSlot} in ${selectedResource} for "${bookingTitle}"`);
+    setShowBookModal(false);
     setBookingTitle('');
   };
 
-  const slotStyles = {
-    booked: {
-      cardClass: 'bg-indigo-900 border border-indigo-950 text-indigo-100 font-semibold',
-      icon: 'event_busy',
-      iconClass: 'text-indigo-300',
-      desc: '',
-      cursor: 'cursor-not-allowed'
-    },
-    conflict: {
-      cardClass: 'bg-red-50/70 border border-dashed border-red-300 text-red-700 font-medium italic',
-      icon: 'warning',
-      iconClass: 'text-red-500',
-      desc: '',
-      cursor: 'cursor-not-allowed'
-    },
-    available: {
-      cardClass: 'bg-white border border-dashed border-gray-200 text-gray-400 font-medium hover:bg-indigo-50/40 hover:border-indigo-200 hover:text-indigo-600 transition-all',
-      icon: 'add_circle',
-      iconClass: 'text-gray-400 group-hover:text-indigo-500 transition-colors',
-      desc: 'Available — click to book',
-      cursor: 'cursor-pointer'
-    }
-  };
-
   return (
-    <div className="flex min-h-screen bg-gray-50/50 font-sans">
+    <div className="flex min-h-screen bg-[#FBFBFC] font-sans antialiased text-slate-800">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-100 px-8 py-5 sticky top-0 z-40 shadow-sm flex items-center justify-between">
-          <div className="pl-10 md:pl-0">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Resource Booking</h1>
-            <p className="text-xs text-gray-500 mt-1">Schedule and manage shared resource reservations</p>
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        {/* Top Header */}
+        <header className="bg-white border-b border-slate-100 px-8 py-5 sticky top-0 z-40">
+          <div>
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">Resource Booking</h1>
+            <p className="text-xs text-slate-400 font-semibold mt-1">Schedule and manage shared resource reservations</p>
           </div>
         </header>
 
-        {/* Content Container */}
-        <div className="p-8 max-w-4xl w-full mx-auto space-y-6 text-left">
+        {/* Page Content */}
+        <div className="px-8 py-6 max-w-3xl w-full mx-auto space-y-6 text-left">
           
           {/* Resource Selector */}
-          <div className="relative bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Resource</label>
-            <div className="relative">
-              <input 
-                value={resourceInput} 
-                onChange={e => setResourceInput(e.target.value)} 
-                onFocus={() => setShowResourceDrop(true)} 
-                onBlur={() => setTimeout(() => setShowResourceDrop(false), 200)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100/50 transition-all"
-              />
-              <span className="material-symbols-outlined absolute right-3.5 top-3.5 text-gray-400 pointer-events-none">expand_more</span>
-            </div>
-
+          <div className="relative">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Resource Selection</label>
+            <input 
+              type="text"
+              value={resourceInput} 
+              onChange={e => setResourceInput(e.target.value)} 
+              onFocus={() => setShowResourceDrop(true)} 
+              onBlur={() => setTimeout(() => setShowResourceDrop(false), 180)}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-850 placeholder-slate-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-white shadow-sm"
+            />
             {showResourceDrop && (
-              <div className="absolute top-[102%] left-6 right-6 z-50 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-xl max-h-60 overflow-y-auto mt-1">
+              <div className="absolute top-[100%] left-0 right-0 z-50 bg-white border border-slate-200 rounded-2xl mt-1.5 shadow-xl overflow-hidden divide-y divide-slate-50">
                 {RESOURCES.map(r => (
                   <div 
                     key={r} 
                     onMouseDown={() => handleResourceSelect(r)} 
-                    className={`px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-50 transition-colors flex justify-between items-center ${
-                      r === selectedResource ? 'text-indigo-600 font-bold bg-indigo-50/20' : 'text-gray-700'
+                    className={`p-3 text-xs cursor-pointer hover:bg-slate-50 transition-colors ${
+                      r === selectedResource ? 'text-indigo-650 font-bold bg-indigo-50/20' : 'text-slate-700'
                     }`}
                   >
-                    <span>{r}</span>
-                    {r === selectedResource && <span className="material-symbols-outlined text-indigo-600 text-sm">check</span>}
+                    {r}
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Day selection tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {/* Day Tabs */}
+          <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl w-fit">
             {DAYS.map(d => (
               <button 
                 key={d} 
                 onClick={() => setSelectedDay(d)}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 active:scale-95 border ${
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   d === selectedDay 
-                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-100' 
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                    ? 'bg-white text-slate-900 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-850'
                 }`}
               >
                 {d}
@@ -165,137 +146,156 @@ export default function Booking() {
             ))}
           </div>
 
-          {/* Slots visual layout */}
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-            {slots.map((slot, index) => {
-              const currentStyle = slotStyles[slot.type];
+          {/* Slot Rows List */}
+          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden divide-y divide-slate-100">
+            {slots.map((s, i) => {
+              let rowStyle = '';
+              let labelStyle = '';
+              let icon = '';
+              let badge = '';
+
+              if (s.type === 'booked') {
+                rowStyle = 'cursor-not-allowed bg-emerald-50/20';
+                labelStyle = 'bg-emerald-50 border-emerald-100 text-emerald-700 font-semibold';
+                icon = 'event_busy';
+                badge = 'Booked';
+              } else if (s.type === 'conflict') {
+                rowStyle = 'cursor-not-allowed bg-red-50/10';
+                labelStyle = 'bg-red-50 border-red-100 text-red-600 font-semibold italic border-dashed';
+                icon = 'warning';
+                badge = 'Conflict';
+              } else {
+                rowStyle = 'cursor-pointer hover:bg-indigo-50/20';
+                labelStyle = 'bg-white border-slate-200 border-dashed text-slate-400 font-medium hover:border-indigo-400 hover:text-indigo-600';
+                icon = 'add_circle';
+                badge = 'Available';
+              }
+
               return (
                 <div 
-                  key={index} 
-                  onClick={() => handleSlotClick(slot)}
-                  className={`flex items-center gap-5 px-6 py-4.5 group ${currentStyle.cursor}`}
+                  key={i} 
+                  onClick={() => handleSlotClick(s)} 
+                  className={`flex items-center gap-4 px-6 py-4.5 transition-colors ${rowStyle}`}
                 >
-                  {/* Time label */}
-                  <span className="w-12 text-sm font-extrabold text-gray-800 flex-shrink-0">{slot.time}</span>
-                  
-                  {/* Slot block */}
-                  <div className={`flex-1 flex items-center gap-3 px-4 py-3 rounded-xl ${currentStyle.cardClass}`}>
-                    <span className={`material-symbols-outlined text-lg ${currentStyle.iconClass}`}>
-                      {currentStyle.icon}
-                    </span>
-                    <span className="text-xs tracking-tight md:text-sm">
-                      {slot.label || currentStyle.desc}
-                    </span>
+                  <span className="w-12 text-xs font-black text-slate-800 flex-shrink-0">{s.time}</span>
+                  <div className={`flex-1 p-2.5 border rounded-xl flex items-center justify-between gap-3 transition-colors ${labelStyle}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base flex-shrink-0">{icon}</span>
+                      <span className="text-xs leading-normal">{s.label || 'Slot is open — click to reserve resource'}</span>
+                    </div>
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border border-current bg-white/50">{badge}</span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Lower Actions & Legend */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
+          {/* Quick Book Trigger */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
             <button 
               onClick={() => setShowBookModal(true)}
-              className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-sm shadow-green-100 hover:shadow-md active:scale-98 transition-all w-full sm:w-auto"
+              className="flex items-center gap-1.5 px-6 py-3 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-98 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-lg font-bold">add</span>
+              <span className="material-symbols-outlined text-base">add</span>
               Book a Slot
             </button>
 
             {/* Legend indicators */}
-            <div className="flex gap-4 items-center flex-wrap">
-              {[
-                { class: 'bg-indigo-900 border-indigo-950', label: 'Booked' },
-                { class: 'bg-red-50 border-red-300 border-dashed', label: 'Conflict' },
-                { class: 'bg-white border-gray-200 border-dashed', label: 'Available' }
-              ].map(item => (
-                <div key={item.label} className="flex items-center gap-2">
-                  <div className={`w-3.5 h-3.5 rounded-md border ${item.class}`} />
-                  <span className="text-xs text-gray-500 font-semibold">{item.label}</span>
-                </div>
-              ))}
+            <div className="flex gap-4">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-md bg-emerald-50 border border-emerald-250 inline-block" />
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Booked</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-md bg-red-50 border border-red-250 border-dashed inline-block" />
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Conflict</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-md bg-white border border-slate-250 border-dashed inline-block" />
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Available</span>
+              </div>
             </div>
           </div>
 
         </div>
       </main>
 
-      {/* Booking Dialog Modal */}
+      {/* Booking Form Dialog */}
       {showBookModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Backdrop blur */}
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
+          onClick={() => setShowBookModal(false)}
+        >
           <div 
-            className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" 
-            onClick={() => setShowBookModal(false)}
-          />
-          {/* Modal content box */}
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative z-10 border border-gray-100 p-6 text-left animate-slide-in">
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="text-base font-extrabold text-gray-900 tracking-tight">Book a Slot</h3>
-              <button 
-                onClick={() => setShowBookModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <span className="material-symbols-outlined text-lg">close</span>
-              </button>
+            className="bg-white border border-slate-100 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-6 text-left animate-slide-up"
+            onClick={e => e.stopPropagation()}
+          >
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">Reserve Time Slot</h3>
+              <p className="text-xs text-slate-400 font-semibold mt-1">Book shared facilities for team collaborations</p>
             </div>
 
-            <div className="space-y-4">
+            <form onSubmit={handleConfirm} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Resource</label>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Resource</label>
                 <input 
+                  type="text" 
                   value={selectedResource} 
                   readOnly 
-                  className="w-full px-4 py-2.5 border border-gray-50 bg-gray-50 text-gray-400 rounded-xl text-sm focus:outline-none cursor-not-allowed"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-400 bg-slate-50 cursor-not-allowed font-semibold"
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Date</label>
+                  <input 
+                    type="text" 
+                    value={`${selectedDay}, ${dayNum} ${monthName}`} 
+                    readOnly 
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-400 bg-slate-50 cursor-not-allowed font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Time Slot</label>
+                  <select 
+                    value={bookingSlot} 
+                    onChange={e => setBookingSlot(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-white cursor-pointer"
+                  >
+                    {availableSlots.map(s => <option key={s.time} value={s.time}>{s.time}</option>)}
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Date</label>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Meeting Title *</label>
                 <input 
-                  value={`${selectedDay}, ${dayNum} ${monthName}`} 
-                  readOnly 
-                  className="w-full px-4 py-2.5 border border-gray-50 bg-gray-50 text-gray-400 rounded-xl text-sm focus:outline-none cursor-not-allowed"
+                  type="text" 
+                  required
+                  placeholder="e.g. Sprint Planning Session"
+                  value={bookingTitle}
+                  onChange={e => setBookingTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-slate-50/30 focus:bg-white"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Time Slot</label>
-                <select 
-                  value={bookingSlot} 
-                  onChange={e => setBookingSlot(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:border-indigo-500 bg-white cursor-pointer"
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setShowBookModal(false)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
                 >
-                  {availableSlots.map(s => <option key={s.time} value={s.time}>{s.time}</option>)}
-                </select>
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                >
+                  Confirm Booking
+                </button>
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Meeting Title *</label>
-                <input 
-                  value={bookingTitle} 
-                  onChange={e => setBookingTitle(e.target.value)} 
-                  placeholder="e.g. Sprint Planning Sync" 
-                  autoFocus 
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end mt-6">
-              <button 
-                onClick={() => setShowBookModal(false)} 
-                className="px-4.5 py-2.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleConfirm} 
-                className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition-all active:scale-98 shadow-sm shadow-green-100"
-              >
-                Confirm Booking
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
