@@ -30,8 +30,15 @@ export default function Signup() {
         <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/70 to-transparent pointer-events-none" />
         
         <div className="relative z-10 max-w-lg">
-          <h1 className="text-4xl font-bold mb-2 tracking-tight">AssetFlow</h1>
-          <p className="text-slate-400 text-lg mb-12 font-medium">Industrial Grade Enterprise Resource Planning</p>
+          <div className="mb-10 flex items-center gap-4">
+            <div className="flex items-center justify-center">
+              <img src="/favicon.jpg" alt="AssetFlow Logo" className="w-14 h-14 object-contain rounded-md" />
+            </div>
+            <div className="flex flex-col justify-center">
+              <h1 className="text-4xl font-bold tracking-tight leading-none mb-2">AssetFlow</h1>
+              <p className="text-slate-400 text-[15px] font-medium leading-none">Industrial Grade Enterprise Resource Planning</p>
+            </div>
+          </div>
           
           <div className="space-y-6">
             {/* Feature 1 */}
