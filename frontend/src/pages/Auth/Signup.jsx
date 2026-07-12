@@ -1,159 +1,44 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
+const DEPARTMENTS = ['Select Department', 'Engineering', 'Operations', 'Marketing', 'Sales', 'HR', 'Audit'];
+
 export default function Signup() {
   const navigate = useNavigate();
-  const threeLoadedRef = useRef(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [orgName, setOrgName] = useState('');
+  const [department, setDepartment] = useState('Select Department');
+  const [password, setPassword] = useState('');
+  const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
-  useEffect(() => {
-    if (threeLoadedRef.current) return;
-    threeLoadedRef.current = true;
-
-    const tryInit = () => {
-      if (window.THREE) {
-        // Small delay so the DOM is fully painted and container has real dimensions
-        setTimeout(initThreeScene, 100);
-      } else {
-        const existing = document.querySelector('script[data-threejs]');
-        if (existing) {
-          existing.addEventListener('load', () => setTimeout(initThreeScene, 100));
-          return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-        script.async = true;
-        script.setAttribute('data-threejs', 'true');
-        script.onload = () => setTimeout(initThreeScene, 100);
-        document.head.appendChild(script);
-      }
-    };
-    tryInit();
-
-    return () => {
-      const c = document.getElementById('threejs-signup');
-      if (c && c._cleanup) c._cleanup();
-    };
-  }, []);
-
-  function initThreeScene() {
-    const container = document.getElementById('threejs-signup');
-    if (!container || !window.THREE) return;
-
-    // Ensure no double-init
-    if (container._initialized) return;
-    container._initialized = true;
-
-    const THREE = window.THREE;
-    let animId;
-
-    const w = container.clientWidth || window.innerWidth / 2;
-    const h = container.clientHeight || window.innerHeight;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
-    camera.position.z = 5;
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
-
-    // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const pl1 = new THREE.PointLight(0x2563eb, 2);
-    pl1.position.set(5, 5, 5);
-    scene.add(pl1);
-    const pl2 = new THREE.PointLight(0xb4c5ff, 0.8);
-    pl2.position.set(-5, -3, 3);
-    scene.add(pl2);
-
-    // Geometry group
-    const group = new THREE.Group();
-
-    group.add(new THREE.Mesh(
-      new THREE.BoxGeometry(2, 2, 2),
-      new THREE.MeshPhongMaterial({ color: 0x2563eb, transparent: true, opacity: 0.2, shininess: 100 })
-    ));
-    group.add(new THREE.Mesh(
-      new THREE.BoxGeometry(2.1, 2.1, 2.1),
-      new THREE.MeshBasicMaterial({ color: 0x60a5fa, wireframe: true, transparent: true, opacity: 0.5 })
-    ));
-
-    for (let i = 0; i < 35; i++) {
-      const s = new THREE.Mesh(
-        new THREE.SphereGeometry(0.045, 8, 8),
-        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })
-      );
-      s.position.set((Math.random() - 0.5) * 1.85, (Math.random() - 0.5) * 1.85, (Math.random() - 0.5) * 1.85);
-      group.add(s);
-    }
-
-    const ringMat = (op) => new THREE.MeshPhongMaterial({ color: 0x2563eb, transparent: true, opacity: op });
-    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.018, 16, 100), ringMat(0.4));
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.018, 16, 100), ringMat(0.3));
-    const ring3 = new THREE.Mesh(new THREE.TorusGeometry(3.0, 0.012, 16, 100), ringMat(0.2));
-    ring1.rotation.x = Math.PI / 2;
-    ring2.rotation.x = Math.PI / 4;
-    ring3.rotation.y = Math.PI / 3;
-    group.add(ring1, ring2, ring3);
-    scene.add(group);
-
-    let mx = 0, my = 0;
-    const onMouse = (e) => {
-      mx = (e.clientX / window.innerWidth - 0.5) * 0.4;
-      my = (e.clientY / window.innerHeight - 0.5) * 0.4;
-    };
-    window.addEventListener('mousemove', onMouse);
-
-    const animate = () => {
-      animId = requestAnimationFrame(animate);
-      group.rotation.y += 0.004;
-      group.rotation.x += 0.002;
-      group.position.x += (mx - group.position.x) * 0.04;
-      group.position.y += (-my - group.position.y) * 0.04;
-      ring1.rotation.z += 0.008;
-      ring2.rotation.z -= 0.006;
-      ring3.rotation.x += 0.003;
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    const onResize = () => {
-      const nw = container.clientWidth;
-      const nh = container.clientHeight;
-      if (!nw || !nh) return;
-      camera.aspect = nw / nh;
-      camera.updateProjectionMatrix();
-      renderer.setSize(nw, nh);
-    };
-    window.addEventListener('resize', onResize);
-
-    container._cleanup = () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('mousemove', onMouse);
-      window.removeEventListener('resize', onResize);
-      renderer.dispose();
-      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
-      container._initialized = false;
-    };
-  }
+  const getPasswordStrength = () => {
+    if (!password) return { label: 'Empty', color: 'text-slate-400' };
+    if (password.length < 6) return { label: 'Weak', color: 'text-red-500 font-bold' };
+    if (password.length < 10) return { label: 'Medium', color: 'text-amber-500 font-bold' };
+    return { label: 'Strong', color: 'text-green-500 font-bold' };
+  };
 
   const handleSignup = (e) => {
     e.preventDefault();
-    const data = new FormData(e.target);
-    const name = data.get('full_name');
-    const pw = data.get('password');
-    const cpw = data.get('confirm_password');
-    if (pw !== cpw) { toast.error('Passwords do not match!'); return; }
+    if (department === 'Select Department') {
+      toast.error('Please select a department');
+      return;
+    }
+    if (!agreed) {
+      toast.error('Please agree to the Terms of Service & Privacy Policy');
+      return;
+    }
+
     setSubmitting(true);
     setTimeout(() => {
       setSubmitting(false);
-      setSubmitted(true);
-      toast.success(`Account initialized for ${name}! Redirecting…`);
-      setTimeout(() => { localStorage.setItem('af_logged_in_user', name); navigate('/'); }, 1500);
+      localStorage.setItem('af_logged_in_user', fullName || 'Admin');
+      toast.success(`Account created successfully for ${fullName || 'Admin'}!`);
+      navigate('/');
     }, 1500);
   };
 
@@ -163,219 +48,236 @@ export default function Signup() {
     navigate('/');
   };
 
-  const inputStyle = {
-    background: 'rgba(15,23,42,0.4)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: '#e1e2ed',
-    outline: 'none',
-  };
-  const inputFocus = (e) => {
-    e.target.style.background = 'rgba(15,23,42,0.6)';
-    e.target.style.borderColor = '#b4c5ff';
-    e.target.style.boxShadow = '0 0 0 4px rgba(180,197,255,0.1)';
-  };
-  const inputBlur = (e) => {
-    e.target.style.background = 'rgba(15,23,42,0.4)';
-    e.target.style.borderColor = 'rgba(255,255,255,0.1)';
-    e.target.style.boxShadow = 'none';
-  };
+  const strength = getPasswordStrength();
 
   return (
-    <div
-      style={{ backgroundColor: '#11131b', color: '#e1e2ed', fontFamily: "'Inter', sans-serif", minHeight: '100vh', display: 'flex' }}
-    >
-      {/* ── Left: Registration Form (scrollable) ── */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '660px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 32px',
-          overflowY: 'auto',
-          minHeight: '100vh',
-          position: 'relative',
-          zIndex: 10,
-        }}
-        className="lg:max-w-[50%]"
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#FBFBFC] font-sans antialiased">
+      
+      {/* Left Column: Image backdrop & ERP text & Cards */}
+      <section 
+        className="hidden md:flex md:w-1/2 bg-cover bg-center relative flex-col justify-between p-16 text-left overflow-hidden"
+        style={{ backgroundImage: 'url("/signup.png")' }}
       >
-        <div style={{ width: '100%', maxWidth: '520px' }}>
+        {/* Soft dark-blue gradient mask */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/85 via-slate-900/60 to-slate-950/85 z-0" />
+        <div className="absolute inset-0 bg-indigo-500/5 mix-blend-overlay z-0" />
 
-          {/* Brand header — inside scrollable column, not fixed */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#eeefff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <span style={{ fontSize: '22px', fontWeight: 700, color: '#b4c5ff', letterSpacing: '-0.01em' }}>AssetFlow</span>
+        {/* Brand header */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-black/10 flex-shrink-0 p-1.5">
+            <img src="/logo.svg" className="w-full h-full object-contain" alt="AssetFlow Logo" />
+          </div>
+          <div>
+            <div className="text-lg font-black text-white tracking-tight leading-none">AssetFlow</div>
+            <div className="text-[9px] text-indigo-300 font-bold uppercase tracking-widest mt-1">Enterprise ERP</div>
+          </div>
+        </div>
+
+        {/* Overlay Feature Cards */}
+        <div className="relative z-10 space-y-4 my-auto max-w-md">
+          {/* Card 1 */}
+          <div className="bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-2xl p-5 flex gap-4 text-white hover:bg-slate-950/50 transition-all duration-300 shadow-lg shadow-black/5">
+            <div className="w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center flex-shrink-0 border border-white/10">
+              <span className="material-symbols-outlined text-white text-lg">inventory_2</span>
             </div>
-            <Link to="/login" style={{ fontSize: '13px', color: '#c3c6d7', fontWeight: 500, whiteSpace: 'nowrap' }}>
-              Have an account? <span style={{ color: '#b4c5ff', fontWeight: 700 }}>Sign In →</span>
-            </Link>
+            <div className="text-left">
+              <h4 className="text-sm font-bold text-white tracking-tight">Centralized Inventory</h4>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                Single source of truth for all physical and digital assets across multi-site operations.
+              </p>
+            </div>
           </div>
 
-          {/* Glass form card */}
-          <div style={{
-            borderRadius: '16px',
-            padding: '40px 40px',
-            backdropFilter: 'blur(20px)',
-            background: 'rgba(29, 31, 39, 0.7)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 24px 64px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
-          }}>
-            {/* Card heading */}
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h1 style={{ fontSize: '28px', lineHeight: '36px', fontWeight: 700, color: '#e1e2ed', letterSpacing: '-0.01em', margin: 0 }}>
-                Initialize Your Account
-              </h1>
-              <p style={{ fontFamily: "'Geist', 'Courier New', monospace", fontSize: '11px', letterSpacing: '0.1em', color: '#8d90a0', marginTop: '8px', textTransform: 'uppercase' }}>
-                Global Asset Architecture
+          {/* Card 2 */}
+          <div className="bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-2xl p-5 flex gap-4 text-white hover:bg-slate-950/50 transition-all duration-300 shadow-lg shadow-black/5">
+            <div className="w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center flex-shrink-0 border border-white/10">
+              <span className="material-symbols-outlined text-white text-lg">event_available</span>
+            </div>
+            <div className="text-left">
+              <h4 className="text-sm font-bold text-white tracking-tight">Conflict-free Booking</h4>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                Intelligent resource allocation preventing double-bookings and scheduling bottlenecks.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-2xl p-5 flex gap-4 text-white hover:bg-slate-950/50 transition-all duration-300 shadow-lg shadow-black/5">
+            <div className="w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center flex-shrink-0 border border-white/10">
+              <span className="material-symbols-outlined text-white text-lg">engineering</span>
+            </div>
+            <div className="text-left">
+              <h4 className="text-sm font-bold text-white tracking-tight">Automated Maintenance</h4>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                Predictive lifecycle monitoring and automated service ticket generation.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Left side footer stats */}
+        <div className="relative z-10 flex justify-between items-center text-[10px] text-slate-400 font-bold tracking-widest font-mono border-t border-white/5 pt-4">
+          <span>AES-256 ENCRYPTED</span>
+          <span>V4.2.1-STABLE</span>
+        </div>
+      </section>
+
+      {/* Right Column: Register Card */}
+      <section className="flex-1 flex flex-col items-center justify-between p-6 sm:p-12 md:p-16 bg-[#FBFBFC] min-h-screen">
+        <div className="w-full max-w-xl my-auto space-y-6 text-left">
+          
+          {/* Card Box */}
+          <div className="bg-white border border-slate-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.03)] p-6 sm:p-10 space-y-6">
+            
+            {/* Header Badge */}
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-slate-100 rounded-full bg-slate-50 text-[9px] font-extrabold text-slate-500 uppercase tracking-widest">
+              <span className="material-symbols-outlined text-xs text-slate-500">domain</span>
+              Enterprise Onboarding
+            </div>
+
+            <div>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Create Organization Account</h1>
+              <p className="text-xs text-slate-400 mt-2 font-semibold leading-relaxed">
+                Scale your operations with precision tracking and unified resource management.
               </p>
             </div>
 
-            <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onSubmit={handleSignup}>
-
-              {/* Full Name */}
-              <div>
-                <label htmlFor="full_name" style={{ fontFamily: "'Geist', monospace", fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(195,198,215,0.7)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-                  Legal Full Name
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(195,198,215,0.4)" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                  </svg>
-                  <input id="full_name" name="full_name" type="text" placeholder="Alexander Vance" required
-                    style={{ ...inputStyle, width: '100%', height: '52px', paddingLeft: '42px', paddingRight: '16px', borderRadius: '10px', fontSize: '15px', boxSizing: 'border-box' }}
-                    onFocus={inputFocus} onBlur={inputBlur}
+            <form onSubmit={handleSignup} className="space-y-4">
+              
+              {/* Inputs Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-2">
+                    Full Name
+                  </label>
+                  <input 
+                    type="text" 
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    placeholder="e.g. Marcus Aurelius"
+                    required
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-950 placeholder-slate-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-slate-50/30 focus:bg-white transition-all duration-150"
                   />
                 </div>
-              </div>
 
-              {/* Email */}
-              <div>
-                <label htmlFor="email" style={{ fontFamily: "'Geist', monospace", fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(195,198,215,0.7)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-                  Corporate Email
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(195,198,215,0.4)" strokeWidth="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
-                  </svg>
-                  <input id="email" name="email" type="email" placeholder="vance@assetflow.com" required
-                    style={{ ...inputStyle, width: '100%', height: '52px', paddingLeft: '42px', paddingRight: '16px', borderRadius: '10px', fontSize: '15px', boxSizing: 'border-box' }}
-                    onFocus={inputFocus} onBlur={inputBlur}
+                {/* Corporate Email */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-2">
+                    Corporate Email
+                  </label>
+                  <input 
+                    type="email" 
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="m.aurelius@company.com"
+                    required
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-950 placeholder-slate-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-slate-50/30 focus:bg-white transition-all duration-150"
                   />
                 </div>
-              </div>
 
-              {/* Password Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                {/* Organization Name */}
                 <div>
-                  <label htmlFor="password" style={{ fontFamily: "'Geist', monospace", fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(195,198,215,0.7)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-                    Access Key
+                  <label className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-2">
+                    Organization Name
                   </label>
-                  <div style={{ position: 'relative' }}>
-                    <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(195,198,215,0.4)" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                    <input id="password" name="password" type="password" placeholder="••••••••" required
-                      style={{ ...inputStyle, width: '100%', height: '52px', paddingLeft: '42px', paddingRight: '12px', borderRadius: '10px', fontSize: '15px', boxSizing: 'border-box' }}
-                      onFocus={inputFocus} onBlur={inputBlur}
-                    />
-                  </div>
+                  <input 
+                    type="text" 
+                    value={orgName}
+                    onChange={e => setOrgName(e.target.value)}
+                    placeholder="AssetFlow Enterprise"
+                    required
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-950 placeholder-slate-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-slate-50/30 focus:bg-white transition-all duration-150"
+                  />
                 </div>
+
+                {/* Department Dropdown */}
                 <div>
-                  <label htmlFor="confirm_password" style={{ fontFamily: "'Geist', monospace", fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(195,198,215,0.7)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-                    Confirm Key
+                  <label className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-2">
+                    Department
                   </label>
-                  <div style={{ position: 'relative' }}>
-                    <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(195,198,215,0.4)" strokeWidth="2">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
-                    </svg>
-                    <input id="confirm_password" name="confirm_password" type="password" placeholder="••••••••" required
-                      style={{ ...inputStyle, width: '100%', height: '52px', paddingLeft: '42px', paddingRight: '12px', borderRadius: '10px', fontSize: '15px', boxSizing: 'border-box' }}
-                      onFocus={inputFocus} onBlur={inputBlur}
-                    />
-                  </div>
+                  <select 
+                    value={department}
+                    onChange={e => setDepartment(e.target.value)}
+                    required
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-950 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-slate-50/30 focus:bg-white transition-all duration-150 cursor-pointer"
+                  >
+                    {DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                  </select>
                 </div>
               </div>
 
-              {/* Terms */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', paddingTop: '4px' }}>
-                <input id="terms" name="terms" type="checkbox" required
-                  style={{ marginTop: '3px', width: '16px', height: '16px', accentColor: '#2563eb', cursor: 'pointer', flexShrink: 0 }}
+              {/* Password */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+                    Password
+                  </label>
+                  <span className={`text-[10px] font-semibold ${strength.color}`}>
+                    Strength: {strength.label}
+                  </span>
+                </div>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="w-full pl-4 pr-11 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-950 placeholder-slate-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-slate-50/30 focus:bg-white transition-all duration-150"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    className="absolute right-3.5 top-2 text-slate-400 hover:text-slate-600 flex items-center justify-center p-1.5 cursor-pointer rounded-lg hover:bg-slate-100 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-base">
+                      {showPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Agreement */}
+              <div className="flex items-start gap-2.5 pt-2">
+                <input 
+                  type="checkbox" 
+                  id="agree" 
+                  checked={agreed}
+                  onChange={e => setAgreed(e.target.checked)}
+                  required
+                  className="w-4.5 h-4.5 border-slate-300 rounded text-black focus:ring-black accent-black cursor-pointer mt-0.5 flex-shrink-0"
                 />
-                <label htmlFor="terms" style={{ fontSize: '13px', color: '#c3c6d7', cursor: 'pointer', lineHeight: '1.5' }}>
-                  I accept the <a href="#" style={{ color: '#b4c5ff' }}>Terms of Service</a> and <a href="#" style={{ color: '#b4c5ff' }}>Privacy Protocol</a>.
+                <label htmlFor="agree" className="text-[11px] text-slate-500 font-semibold cursor-pointer select-none leading-relaxed">
+                  I agree to the <a href="#" className="text-black hover:text-indigo-600 hover:underline font-extrabold transition-colors">Terms of Service</a> and <a href="#" className="text-black hover:text-indigo-600 hover:underline font-extrabold transition-colors">Privacy Policy</a>. I understand that my data will be managed according to enterprise security standards.
                 </label>
               </div>
 
               {/* Submit Button */}
-              <button
+              <button 
                 type="submit"
-                disabled={submitting || submitted}
-                style={{
-                  width: '100%',
-                  height: '58px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: submitted ? '#10b981' : '#2563eb',
-                  color: '#fff',
-                  fontSize: '17px',
-                  fontWeight: 600,
-                  cursor: submitting || submitted ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  boxShadow: '0 8px 24px rgba(37,99,235,0.3)',
-                  transition: 'all 0.2s ease',
-                  transform: 'scale(1)',
-                }}
-                onMouseEnter={e => { if (!submitting && !submitted) e.currentTarget.style.filter = 'brightness(1.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.filter = 'none'; }}
+                disabled={submitting}
+                className="w-full mt-2 py-3 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer group"
               >
-                {submitting ? (
-                  <>
-                    <svg style={{ animation: 'spin 1s linear infinite' }} viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                    </svg>
-                    Processing…
-                  </>
-                ) : submitted ? (
-                  <>
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    Initialized
-                  </>
-                ) : (
-                  <>
-                    Create Account
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                  </>
-                )}
+                {submitting ? 'Creating Account...' : 'Create Account'}
+                <span className="material-symbols-outlined text-base font-bold transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
               </button>
             </form>
 
             {/* Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-              <span style={{ padding: '0 16px', fontFamily: "'Geist', monospace", fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(195,198,215,0.4)', textTransform: 'uppercase' }}>
-                Or Continue With
-              </span>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+            <div className="flex items-center my-4">
+              <div className="flex-grow h-px bg-slate-100" />
+              <span className="px-3 text-[9px] text-slate-400 font-bold uppercase tracking-widest">or continue with</span>
+              <div className="flex-grow h-px bg-slate-100" />
             </div>
 
-            {/* Google Button */}
+            {/* Google Sign Up Button */}
             <button
               type="button"
               onClick={handleGoogleSignup}
-              style={{ width: '100%', height: '50px', borderRadius: '10px', background: 'rgba(15,23,42,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#e1e2ed', fontSize: '14px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(15,23,42,0.7)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(15,23,42,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+              className="w-full flex items-center justify-center gap-2.5 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 text-slate-700 hover:text-slate-900 text-xs font-extrabold transition-all active:scale-[0.98] cursor-pointer shadow-sm shadow-slate-100"
             >
-              <svg viewBox="0 0 24 24" width="18" height="18">
+              <svg viewBox="0 0 24 24" width="18" height="18" className="flex-shrink-0">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -384,95 +286,20 @@ export default function Signup() {
               Continue with Google
             </button>
 
-            <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-              <p style={{ fontSize: '13px', color: '#8d90a0' }}>
-                Already have an account?{' '}
-                <Link to="/login" style={{ color: '#b4c5ff', fontWeight: 600 }}>Sign In</Link>
-              </p>
+            <div className="text-center pt-2 text-xs font-semibold text-slate-400">
+              Already have an account?{' '}
+              <Link 
+                to="/login" 
+                className="text-black hover:text-indigo-600 hover:underline font-extrabold transition-colors"
+              >
+                Sign In
+              </Link>
             </div>
           </div>
 
-          {/* Encrypted label (below card) */}
-          <div style={{ textAlign: 'center', marginTop: '20px', fontFamily: "'Geist', monospace", fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(141,144,160,0.4)', display: 'flex', justifyContent: 'center', gap: '24px' }}>
-            <span>AES-256 ENCRYPTED</span>
-            <span>V4.2.1-STABLE</span>
-          </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Right: Immersive 3D Scene ── */}
-      <div
-        className="hidden lg:block"
-        style={{ flex: 1, position: 'relative', backgroundColor: '#0c0e16', overflow: 'hidden', height: '100vh', minHeight: '100vh' }}
-      >
-        {/* Three.js canvas mount — explicit full dimensions */}
-        <div
-          id="threejs-signup"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}
-        />
-
-        {/* Branding overlay */}
-        <div style={{
-          position: 'relative', zIndex: 10,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          width: '100%', height: '100%', textAlign: 'center', padding: '48px',
-          background: 'linear-gradient(to top, rgba(17,19,27,0.9) 0%, transparent 55%)',
-          pointerEvents: 'none', userSelect: 'none',
-        }}>
-          <h2 style={{ fontSize: '48px', lineHeight: '56px', fontWeight: 700, letterSpacing: '-0.02em', color: '#e1e2ed', marginBottom: '20px' }}>
-            Scale Your <br/>
-            <span style={{ background: 'linear-gradient(to right, #b4c5ff, #b9c7e0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              Enterprise Assets
-            </span>
-          </h2>
-          <p style={{ color: 'rgba(195,198,215,0.75)', fontSize: '16px', maxWidth: '400px', lineHeight: '1.7' }}>
-            Experience the next generation of asset management with high-fidelity, real-time data architecture.
-          </p>
-
-          {/* Status bar */}
-          <div style={{
-            position: 'absolute', bottom: '40px', left: '48px', right: '48px',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            fontFamily: "'Geist', monospace", fontSize: '11px', letterSpacing: '0.08em', color: 'rgba(195,198,215,0.45)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#b4c5ff', boxShadow: '0 0 8px rgba(180,197,255,0.5)' }} />
-              NODE: ASHBURN-VA-01
-            </div>
-            <div style={{ display: 'flex', gap: '24px' }}>
-              <span>AES-256 ENCRYPTED</span>
-              <span>V4.2.1-STABLE</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Radial glow */}
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 40%, rgba(37,99,235,0.06), transparent 65%)', pointerEvents: 'none', zIndex: 1 }} />
-      </div>
-
-      {/* Mobile bottom nav */}
-      <nav
-        className="lg:hidden"
-        style={{
-          position: 'fixed', bottom: 0, left: 0, width: '100%', zIndex: 50,
-          display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '72px',
-          backdropFilter: 'blur(16px)', background: 'rgba(29,31,39,0.7)',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
-        <Link to="/login" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: 'rgba(195,198,215,0.5)', fontFamily: "'Geist', monospace", fontSize: '11px', textDecoration: 'none' }}>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-          Sign In
-        </Link>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#b4c5ff', fontFamily: "'Geist', monospace", fontSize: '11px', fontWeight: 700 }}>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          Sign Up
-        </div>
-      </nav>
-
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
     </div>
   );
 }

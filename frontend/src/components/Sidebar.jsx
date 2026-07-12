@@ -32,8 +32,8 @@ export default function Sidebar() {
       {/* Logo Header */}
       <div className="p-6 border-b border-gray-50 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 flex items-center justify-center shadow-md shadow-indigo-100 flex-shrink-0 animate-pulse">
-            <span className="material-symbols-outlined text-white text-lg font-bold">inventory_2</span>
+          <div className="w-9 h-9 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm flex-shrink-0 p-1">
+            <img src="/logo.svg" className="w-full h-full object-contain" alt="AssetFlow Logo" />
           </div>
           <div>
             <div className="text-base font-extrabold text-gray-900 tracking-tight">AssetFlow</div>
