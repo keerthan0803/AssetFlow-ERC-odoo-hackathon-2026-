@@ -2,32 +2,30 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-// Layouts
-import AuthLayout from './layouts/AuthLayout';
-import RequireAuth from './components/RequireAuth';
-
 // Auth Pages
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
 
-// Dashboard & AI Pages
+// App Pages
 import Dashboard from './pages/Dashboard/Dashboard';
-import Assistant from './pages/Assistant/Assistant';
 import AssetList from './pages/Assets/AssetList';
 import AssetDetail from './pages/Assets/AssetDetail';
 import Departments from './pages/Organization/Departments';
-import Sustainability from './pages/Sustainability/Sustainability';
 import Maintenance from './pages/Maintenance/Maintenance';
 import Booking from './pages/Booking/Booking';
-import Allocation from './pages/Allocation/Allocation';
 import Audit from './pages/Audit/Audit';
+import Allocation from './pages/Allocation/Allocation';
 import Reports from './pages/Reports/Reports';
 import Notifications from './pages/Notifications/Notifications';
+import Profile from './pages/Profile/Profile';
+
+// Layouts
+import AuthLayout from './layouts/AuthLayout';
 
 export default function App() {
   return (
     <Router>
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           style: {
@@ -46,41 +44,36 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
         </Route>
 
-        <Route element={<RequireAuth />}>
-          {/* Command Center Dashboard */}
-          <Route path="/" element={<Dashboard />} />
+        {/* Dashboard */}
+        <Route path="/" element={<Dashboard />} />
 
-          {/* Assets Overview */}
-          <Route path="/assets" element={<AssetList />} />
-          <Route path="/assets/:id" element={<AssetDetail />} />
+        {/* Assets */}
+        <Route path="/assets" element={<AssetList />} />
+        <Route path="/assets/:id" element={<AssetDetail />} />
 
-          {/* AI Assistant Feed */}
-          <Route path="/assistant" element={<Assistant />} />
+        {/* Organization */}
+        <Route path="/organization/departments" element={<Departments />} />
 
-          {/* Organization Directory */}
-          <Route path="/organization/departments" element={<Departments />} />
+        {/* Allocation & Transfer */}
+        <Route path="/allocation" element={<Allocation />} />
 
-          {/* Maintenance Center */}
-          <Route path="/maintenance" element={<Maintenance />} />
+        {/* Resource Booking */}
+        <Route path="/booking" element={<Booking />} />
 
-          {/* Sustainability Dashboard */}
-          <Route path="/sustainability" element={<Sustainability />} />
+        {/* Maintenance */}
+        <Route path="/maintenance" element={<Maintenance />} />
 
-          {/* Booking & Reservations */}
-          <Route path="/booking" element={<Booking />} />
+        {/* Audit & Compliance */}
+        <Route path="/audit" element={<Audit />} />
 
-          {/* Allocation & Transfer */}
-          <Route path="/allocation" element={<Allocation />} />
+        {/* Reports */}
+        <Route path="/reports" element={<Reports />} />
 
-          {/* Asset Audit */}
-          <Route path="/audit" element={<Audit />} />
+        {/* Notifications */}
+        <Route path="/notifications" element={<Notifications />} />
 
-          {/* Reports & Analytics */}
-          <Route path="/reports" element={<Reports />} />
-
-          {/* Notifications */}
-          <Route path="/notifications" element={<Notifications />} />
-        </Route>
+        {/* User Profile */}
+        <Route path="/profile" element={<Profile />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />

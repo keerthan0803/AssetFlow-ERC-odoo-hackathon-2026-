@@ -14,32 +14,32 @@ const monthName = MONTHS[today.getMonth()];
 const generateSlots = (resource) => {
   const base = {
     'Conference Room B2': [
-      { time: '09:00', label: 'Booked — Procurement Team Sync — 9 to 10', type: 'booked' },
-      { time: '10:00', label: 'Overlapping request 9:30 to 10:30 — scheduling conflict detected', type: 'conflict' },
-      { time: '11:00', label: '', type: 'available' },
-      { time: '12:00', label: '', type: 'available' },
-      { time: '13:00', label: '', type: 'available' },
-      { time: '14:00', label: 'Booked — Employee Onboarding Session — 2 to 3', type: 'booked' },
-      { time: '15:00', label: '', type: 'available' },
+      { time: '09:00 AM', label: 'Booked - Procurement Team Sync', type: 'booked' },
+      { time: '10:00 AM', label: 'Booking Conflict Detected - Requested 9:30 to 10:30', type: 'conflict' },
+      { time: '11:00 AM', label: '', type: 'available' },
+      { time: '12:00 PM', label: '', type: 'available' },
+      { time: '01:00 PM', label: '', type: 'available' },
+      { time: '02:00 PM', label: 'Booked - Employee Onboarding Session', type: 'booked' },
+      { time: '03:00 PM', label: '', type: 'available' },
     ],
     'Conference Room A1': [
-      { time: '09:00', label: '', type: 'available' },
-      { time: '10:00', label: 'Booked — Engineering Sync — 10 to 11', type: 'booked' },
-      { time: '11:00', label: '', type: 'available' },
-      { time: '12:00', label: 'Booked — Executive Leadership Meeting — 12 to 2', type: 'booked' },
-      { time: '13:00', label: '', type: 'available' },
-      { time: '14:00', label: '', type: 'available' },
-      { time: '15:00', label: '', type: 'available' },
+      { time: '09:00 AM', label: '', type: 'available' },
+      { time: '10:00 AM', label: 'Booked - Engineering Sync', type: 'booked' },
+      { time: '11:00 AM', label: '', type: 'available' },
+      { time: '12:00 PM', label: 'Booked - Executive Leadership Meeting', type: 'booked' },
+      { time: '01:00 PM', label: '', type: 'available' },
+      { time: '02:00 PM', label: '', type: 'available' },
+      { time: '03:00 PM', label: '', type: 'available' },
     ],
   };
   return base[resource] || [
-    { time: '09:00', label: '', type: 'available' },
-    { time: '10:00', label: '', type: 'available' },
-    { time: '11:00', label: '', type: 'available' },
-    { time: '12:00', label: '', type: 'available' },
-    { time: '13:00', label: '', type: 'available' },
-    { time: '14:00', label: '', type: 'available' },
-    { time: '15:00', label: '', type: 'available' },
+    { time: '09:00 AM', label: '', type: 'available' },
+    { time: '10:00 AM', label: '', type: 'available' },
+    { time: '11:00 AM', label: '', type: 'available' },
+    { time: '12:00 PM', label: '', type: 'available' },
+    { time: '01:00 PM', label: '', type: 'available' },
+    { time: '02:00 PM', label: '', type: 'available' },
+    { time: '03:00 PM', label: '', type: 'available' },
   ];
 };
 
@@ -50,7 +50,7 @@ export default function Booking() {
   const [selectedDay, setSelectedDay] = useState(dayName);
   const [showBookModal, setShowBookModal] = useState(false);
   const [bookingTitle, setBookingTitle] = useState('');
-  const [bookingSlot, setBookingSlot] = useState('11:00');
+  const [bookingSlot, setBookingSlot] = useState('11:00 AM');
 
   const slots = generateSlots(selectedResource);
   const availableSlots = slots.filter(s => s.type === 'available');
@@ -63,11 +63,11 @@ export default function Booking() {
 
   const handleSlotClick = (slot) => {
     if (slot.type === 'booked') { 
-      toast.error('This slot is already booked'); 
+      toast.error('This slot is already reserved'); 
       return; 
     }
     if (slot.type === 'conflict') { 
-      toast.error('This slot has a conflict check warning'); 
+      toast.error('This slot has an overlapping booking conflict'); 
       return; 
     }
     setBookingSlot(slot.time);
@@ -77,7 +77,7 @@ export default function Booking() {
   const handleConfirm = (e) => {
     e.preventDefault();
     if (!bookingTitle.trim()) { 
-      toast.error('Please enter a meeting title'); 
+      toast.error('Please enter a booking description'); 
       return; 
     }
     toast.success(`Reserved ${bookingSlot} in ${selectedResource} for "${bookingTitle}"`);
@@ -86,137 +86,265 @@ export default function Booking() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#FBFBFC] font-sans antialiased text-slate-800">
+    <div className="flex min-h-screen bg-[#F9F9F7] font-sans antialiased text-[#1a1c1b]">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top Header */}
-        <header className="bg-white border-b border-slate-100 px-8 py-5 sticky top-0 z-40">
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">Resource Booking</h1>
-            <p className="text-xs text-slate-400 font-semibold mt-1">Schedule and manage shared resource reservations</p>
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        
+        {/* TopNavBar */}
+        <header className="sticky top-0 z-40 h-16 bg-[#F9F9F7]/80 backdrop-blur-md border-b border-[#bfc9c5]/30 flex justify-between items-center px-8 w-full">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative w-full max-w-md group">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00352d] transition-colors text-base">search</span>
+              <input 
+                type="text" 
+                placeholder="Search resources, space reservations..."
+                className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-lg pl-9 pr-4 py-2 text-xs focus:ring-2 focus:ring-[#00352d]/10 focus:border-[#00352d] transition-all outline-none text-[#1a1c1b]" 
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-6">
+            <button className="relative text-[#404946] hover:text-[#00352d] transition-colors cursor-pointer">
+              <span className="material-symbols-outlined text-lg">notifications</span>
+              <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#ba1a1a] rounded-full border border-white"></span>
+            </button>
+            <button className="text-[#404946] hover:text-[#00352d] transition-colors cursor-pointer">
+              <span className="material-symbols-outlined text-lg">settings</span>
+            </button>
+            <div className="h-6 w-[1px] bg-[#bfc9c5]/60 mx-1"></div>
+            <div className="flex items-center gap-3 cursor-pointer group">
+              <img 
+                className="w-8 h-8 rounded-full object-cover border border-[#bfc9c5]/35 group-hover:opacity-90"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB78mF9gj116MvI_g8P_WGbeEU8Yo2MLjII1FKiK7DwiABuNDK-AOYpdYn5G9vqXMflgwrw4CAwBMh6W5VFwxx2cEOPeqx_96YhxPGDfOPwY0o4Xnz6PoYSINypixVKlUsJ7u3I5nx1Gn7mF7ACB7ExEOk_Pyit2_ewDXVQPOhNE5iG4MS3VRDyy3v3wzvIuNiA9nF6FzuddFhlKZl2DyToocOBPrUURBa6H3WfnnqnAGb1YJQn9TcJ" 
+                alt="Marcus User" 
+              />
+            </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <div className="px-8 py-6 max-w-3xl w-full mx-auto space-y-6 text-left">
-          
-          {/* Resource Selector */}
-          <div className="relative">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Resource Selection</label>
-            <input 
-              type="text"
-              value={resourceInput} 
-              onChange={e => setResourceInput(e.target.value)} 
-              onFocus={() => setShowResourceDrop(true)} 
-              onBlur={() => setTimeout(() => setShowResourceDrop(false), 180)}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-850 placeholder-slate-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-white shadow-sm"
-            />
-            {showResourceDrop && (
-              <div className="absolute top-[100%] left-0 right-0 z-50 bg-white border border-slate-200 rounded-2xl mt-1.5 shadow-xl overflow-hidden divide-y divide-slate-50">
-                {RESOURCES.map(r => (
-                  <div 
-                    key={r} 
-                    onMouseDown={() => handleResourceSelect(r)} 
-                    className={`p-3 text-xs cursor-pointer hover:bg-slate-50 transition-colors ${
-                      r === selectedResource ? 'text-indigo-650 font-bold bg-indigo-50/20' : 'text-slate-700'
-                    }`}
-                  >
-                    {r}
-                  </div>
-                ))}
+        {/* Scrollable Container */}
+        <div className="flex-1 overflow-y-auto p-8 text-left pb-24 scrollbar-thin scrollbar-thumb-slate-200">
+          <div className="max-w-[1080px] mx-auto grid grid-cols-12 gap-6">
+            
+            {/* Left Column: Scheduler Section */}
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+              
+              {/* Title Section */}
+              <div>
+                <h1 className="text-2xl font-black text-[#00352d] tracking-tight">Resource Booking</h1>
+                <p className="text-xs text-[#404946]/70 font-semibold mt-1">Manage and schedule organizational assets and shared spaces.</p>
               </div>
-            )}
-          </div>
 
-          {/* Day Tabs */}
-          <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl w-fit">
-            {DAYS.map(d => (
-              <button 
-                key={d} 
-                onClick={() => setSelectedDay(d)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  d === selectedDay 
-                    ? 'bg-white text-slate-900 shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-850'
-                }`}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
+              {/* Resource Selector Box */}
+              <section className="bg-white p-6 rounded-2xl border border-[#bfc9c5]/40 shadow-xs space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex flex-col gap-1.5 flex-1 relative">
+                    <span className="text-[10px] font-black uppercase text-[#00352d] tracking-wider">Resource Selection</span>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => toast.success('Previous Date')} 
+                        className="material-symbols-outlined p-1.5 text-[#404946] hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors flex shrink-0 cursor-pointer"
+                      >
+                        chevron_left
+                      </button>
+                      
+                      <div className="relative w-full">
+                        <input 
+                          type="text" 
+                          readOnly 
+                          value={resourceInput}
+                          onClick={() => setShowResourceDrop(!showResourceDrop)}
+                          className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-xl px-4 py-2 text-xs font-bold text-slate-800 cursor-pointer text-left focus:outline-none"
+                        />
+                        {showResourceDrop && (
+                          <div className="absolute top-[100%] left-0 right-0 z-50 bg-white border border-[#bfc9c5]/40 rounded-2xl mt-1.5 shadow-xl overflow-hidden divide-y divide-slate-100">
+                            {RESOURCES.map(r => (
+                              <div 
+                                key={r} 
+                                onMouseDown={() => handleResourceSelect(r)}
+                                className={`p-3 text-xs cursor-pointer hover:bg-slate-50 transition-colors ${
+                                  r === selectedResource ? 'text-[#00352d] font-bold bg-[#b3eee0]/20' : 'text-slate-700'
+                                }`}
+                              >
+                                {r}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
-          {/* Slot Rows List */}
-          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden divide-y divide-slate-100">
-            {slots.map((s, i) => {
-              let rowStyle = '';
-              let labelStyle = '';
-              let icon = '';
-              let badge = '';
-
-              if (s.type === 'booked') {
-                rowStyle = 'cursor-not-allowed bg-emerald-50/20';
-                labelStyle = 'bg-emerald-50 border-emerald-100 text-emerald-700 font-semibold';
-                icon = 'event_busy';
-                badge = 'Booked';
-              } else if (s.type === 'conflict') {
-                rowStyle = 'cursor-not-allowed bg-red-50/10';
-                labelStyle = 'bg-red-50 border-red-100 text-red-600 font-semibold italic border-dashed';
-                icon = 'warning';
-                badge = 'Conflict';
-              } else {
-                rowStyle = 'cursor-pointer hover:bg-indigo-50/20';
-                labelStyle = 'bg-white border-slate-200 border-dashed text-slate-400 font-medium hover:border-indigo-400 hover:text-indigo-600';
-                icon = 'add_circle';
-                badge = 'Available';
-              }
-
-              return (
-                <div 
-                  key={i} 
-                  onClick={() => handleSlotClick(s)} 
-                  className={`flex items-center gap-4 px-6 py-4.5 transition-colors ${rowStyle}`}
-                >
-                  <span className="w-12 text-xs font-black text-slate-800 flex-shrink-0">{s.time}</span>
-                  <div className={`flex-1 p-2.5 border rounded-xl flex items-center justify-between gap-3 transition-colors ${labelStyle}`}>
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base flex-shrink-0">{icon}</span>
-                      <span className="text-xs leading-normal">{s.label || 'Slot is open — click to reserve resource'}</span>
+                      <button 
+                        onClick={() => toast.success('Next Date')} 
+                        className="material-symbols-outlined p-1.5 text-[#404946] hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors flex shrink-0 cursor-pointer"
+                      >
+                        chevron_right
+                      </button>
                     </div>
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border border-current bg-white/50">{badge}</span>
+                  </div>
+
+                  <button 
+                    onClick={() => setShowBookModal(true)}
+                    className="flex items-center justify-center gap-1.5 bg-[#00352d] hover:bg-[#0d4d43] text-white px-5 py-3 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm shrink-0 h-fit"
+                  >
+                    <span className="material-symbols-outlined text-base">add</span>
+                    Book a slot
+                  </button>
+                </div>
+
+                {/* Day Tab Selectors */}
+                <div className="flex gap-1.5 bg-[#f4f4f1] p-1 rounded-xl w-fit">
+                  {DAYS.map(d => (
+                    <button 
+                      key={d} 
+                      onClick={() => setSelectedDay(d)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        d === selectedDay 
+                          ? 'bg-white text-slate-900 shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-850'
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Vertical Timeline Lists */}
+                <div className="space-y-4">
+                  {slots.map((s, i) => {
+                    const isBooked = s.type === 'booked';
+                    const isConflict = s.type === 'conflict';
+                    
+                    return (
+                      <div key={i} className="flex gap-4 items-start">
+                        <span className="w-16 font-mono text-[10px] font-bold text-slate-400 mt-3 flex-shrink-0 text-right">{s.time}</span>
+                        
+                        {isBooked && (
+                          <div className="flex-1 bg-[#b3eee0]/40 border border-[#b3eee0]/60 text-[#00201b] rounded-xl px-4 py-3 shadow-xs flex justify-between items-center transition-all hover:brightness-98 cursor-pointer">
+                            <div>
+                              <p className="text-xs font-bold">Booked - Procurement Team</p>
+                              <p className="text-[10px] opacity-85 font-semibold mt-0.5">{s.time} — 1 hour slot</p>
+                            </div>
+                            <span className="material-symbols-outlined text-[#00352d] text-base" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                          </div>
+                        )}
+
+                        {isConflict && (
+                          <div className="flex-1 border-2 border-dashed border-[#ba1a1a] bg-[#ffdad6]/20 text-[#ba1a1a] rounded-xl px-4 py-3 flex items-center gap-3">
+                            <span className="material-symbols-outlined text-[#ba1a1a] text-lg font-bold">warning</span>
+                            <div>
+                              <p className="text-xs font-bold">Booking Conflict Detected</p>
+                              <p className="text-[10px] text-[#93000a]/85 font-semibold mt-0.5">Requested 9:30 to 10:30 - conflict - slot is unavailable</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {!isBooked && !isConflict && (
+                          <div 
+                            onClick={() => handleSlotClick(s)}
+                            className="flex-1 border border-dashed border-[#bfc9c5]/60 hover:border-[#00352d]/60 hover:text-[#00352d] text-slate-450 rounded-xl px-4 py-3 flex justify-between items-center cursor-pointer transition-all"
+                          >
+                            <span className="text-xs font-semibold">Slot is open — click to reserve resource</span>
+                            <span className="material-symbols-outlined text-base">add_circle</span>
+                          </div>
+                        )}
+
+                      </div>
+                    );
+                  })}
+                </div>
+
+              </section>
+
+            </div>
+
+            {/* Right Column: Enhanced Analytics Sidebar */}
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+              
+              {/* Resource Health Card */}
+              <div className="bg-white p-6 rounded-2xl border border-[#bfc9c5]/40 shadow-xs flex flex-col justify-between relative overflow-hidden">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Resource Health</span>
+                    <div className="text-2xl font-black text-[#00352d] leading-none mt-1">84%</div>
+                    <span className="text-[10px] font-bold text-slate-400 mt-1">Daily Utilization</span>
+                  </div>
+                  <div className="p-2.5 bg-[#dbe1e0] rounded-xl text-[#0d4d43]">
+                    <span className="material-symbols-outlined text-lg">analytics</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+                
+                <div className="w-full bg-[#f4f4f1] h-1.5 rounded-full overflow-hidden border border-slate-200/50">
+                  <div className="bg-[#00352d] h-full w-[84%] rounded-full"></div>
+                </div>
+                
+                <p className="text-[10px] text-slate-400 font-semibold mt-4">Resource is performing optimally with steady demand across peak hours.</p>
+              </div>
 
-          {/* Quick Book Trigger */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
-            <button 
-              onClick={() => setShowBookModal(true)}
-              className="flex items-center gap-1.5 px-6 py-3 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-98 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-base">add</span>
-              Book a Slot
-            </button>
+              {/* Weekly insights */}
+              <div className="bg-white p-6 rounded-2xl border border-[#bfc9c5]/40 shadow-xs space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#00352d] text-lg">assessment</span>
+                  <h3 className="text-xs font-black uppercase text-[#1a1c1b] tracking-wider">Weekly Report</h3>
+                </div>
 
-            {/* Legend indicators */}
-            <div className="flex gap-4">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-md bg-emerald-50 border border-emerald-250 inline-block" />
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Booked</span>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between py-1.5 border-b border-[#bfc9c5]/20 font-semibold text-slate-650">
+                    <span>Peak Attendance</span>
+                    <span className="text-slate-900 font-bold">Tue: 10:00 — 12:00</span>
+                  </div>
+                  <div className="flex justify-between py-1.5 border-b border-[#bfc9c5]/20 font-semibold text-slate-650">
+                    <span>Booking Frequency</span>
+                    <span className="text-slate-900 font-bold">12 Bookings / Week</span>
+                  </div>
+                  <div className="flex justify-between py-1.5 font-semibold text-slate-650">
+                    <span>Avg. Duration</span>
+                    <span className="text-slate-900 font-bold">1h 45m</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-[#bfc9c5]/20">
+                  <img 
+                    className="w-full h-24 object-cover rounded-lg border border-slate-100" 
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgzHamv21zaLX6W16M9SHs5jDIIMecSFKf4bCl-TB0ef2M5igT9GAtc0v-AKczW9mSyacDjRPJgN6l_Xc28XpQs86yHG_Di0yYvaBCqq0RrN_GHCg-Fe6NMFVe7NGyM-czTYrl3HLFWpIacf5eCUwx_mhLGvUPMLAb8824CnCHSyVs6Z93bCaOq5yidTfKXXrhE2khWeJw2NRt20KA5Axp_dVu2OE1llY0FvL34El1uHkf1tWZHQ3x"
+                    alt="Booking Analytics chart" 
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-md bg-red-50 border border-red-250 border-dashed inline-block" />
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Conflict</span>
+
+              {/* Optimization Insight AI */}
+              <div className="bg-[#0d4d43] text-white p-6 rounded-2xl space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#83bdb0] text-base">auto_awesome</span>
+                  <h3 className="text-xs font-black uppercase tracking-wider">Optimization Insight</h3>
+                </div>
+                <p className="text-[11px] font-semibold opacity-90 leading-relaxed">
+                  Data shows that <b>Conference Room B2</b> is frequently booked by small teams of 2. Consider redirecting these to <b>Focus Pods</b> to free up larger capacity rooms.
+                </p>
+                <button 
+                  onClick={() => toast.success('Displaying focus pod scheduling optimization recommendations...')}
+                  className="w-full py-2.5 bg-white text-[#00352d] rounded-xl font-bold text-xs hover:opacity-95 cursor-pointer shadow-xs"
+                >
+                  View Suggestions
+                </button>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-md bg-white border border-slate-250 border-dashed inline-block" />
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Available</span>
+
+              {/* Space layout image */}
+              <div className="rounded-2xl overflow-hidden border border-[#bfc9c5]/40 h-44 relative group shadow-xs">
+                <img 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJ3IVpkZp39wbkFdiWzVpNQW__LhMebrgweq59AAFVEgBDc44Kd98Idfn_N5zqsCoSjlQmJN1ffXKHlZlaY682xn4O1F8lX82T-dgnnf258bYidB0vKmNIcmVRkLxOuE5BBvkuLfWspTG0MxIOxQ8DV46lgMwk0V0ab2mWGfdr_7TxqP9MYQbkSkbRjyoZg8ce7w4BRu5r6Zn5EZvJZZnNYw7HPw9keh_bv5enIyDZ_9YoZOTZAJBx" 
+                  alt="Conference room photo" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#00352d]/80 to-transparent flex flex-col justify-end p-4 text-left">
+                  <span className="text-xs font-black text-white">Conference Room B2</span>
+                  <span className="text-[9px] text-white/80 font-semibold mt-0.5">Capacity: 12 People • Full Tech Integration</span>
+                </div>
               </div>
+
             </div>
-          </div>
 
+          </div>
         </div>
       </main>
 
@@ -261,7 +389,7 @@ export default function Booking() {
                   <select 
                     value={bookingSlot} 
                     onChange={e => setBookingSlot(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-white cursor-pointer"
+                    className="w-full px-3 py-2 border border-[#bfc9c5]/50 rounded-xl text-xs text-slate-800 focus:outline-none bg-white cursor-pointer"
                   >
                     {availableSlots.map(s => <option key={s.time} value={s.time}>{s.time}</option>)}
                   </select>
@@ -276,7 +404,7 @@ export default function Booking() {
                   placeholder="e.g. Sprint Planning Session"
                   value={bookingTitle}
                   onChange={e => setBookingTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-slate-50/30 focus:bg-white"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none bg-slate-50/30 focus:bg-white"
                 />
               </div>
 
@@ -290,7 +418,7 @@ export default function Booking() {
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-[#00352d] hover:bg-[#0d4d43] text-white rounded-xl text-xs font-bold shadow-sm transition-colors cursor-pointer"
                 >
                   Confirm Booking
                 </button>

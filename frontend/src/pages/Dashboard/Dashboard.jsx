@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
@@ -14,6 +14,8 @@ export default function Dashboard() {
       navigate(`/assets?q=${encodeURIComponent(searchQuery)}`);
     }
   };
+
+  const user = localStorage.getItem('af_logged_in_user') || 'Admin';
 
   const activities = [
     { id: 1, title: 'Laptop AF-0114 allocated to Priya Shah', desc: 'Dept: IT Development | Serial: MAC-49201-B', time: '14 mins ago', tag1: 'Asset Transfer', tag2: 'Hardware', bg: 'bg-[#b3eee0]/40 text-[#00201b]' },
