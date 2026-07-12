@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { clearAuthSession, getAuthRole, getAuthUserName } from '../lib/authSession';
 
 const NAV_ITEMS = [
   { label: 'Dashboard',             path: '/',                          icon: 'dashboard' },
@@ -20,12 +21,14 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem('af_logged_in_user');
+    clearAuthSession();
     toast.success('Logged out successfully');
     navigate('/login');
   };
 
-  const user = localStorage.getItem('af_logged_in_user') || 'Admin';
+  const user = getAuthUserName();
+  const role = getAuthRole();
+  const roleLabel = role === 'ADMIN' ? 'Administrator' : 'Employee';
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white border-r border-gray-100 shadow-sm font-sans w-64">
@@ -83,7 +86,7 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-xs font-bold text-gray-900 truncate">{user}</div>
-            <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Administrator</div>
+            <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{roleLabel}</div>
           </div>
         </div>
         <button
