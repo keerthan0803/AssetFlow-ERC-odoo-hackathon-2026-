@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { signupRequest } from '../../lib/authApi';
+import { signupRequest, googleAuthRequest } from '../../lib/authApi';
 import { hasAuthSession, saveAuthSession } from '../../lib/authSession';
+import { requestGoogleAccessToken } from '../../lib/googleAuth';
 
 const DEPARTMENTS = ['Select Department', 'Engineering', 'Operations', 'Marketing', 'Sales', 'HR', 'Audit'];
 
@@ -68,8 +69,22 @@ export default function Signup() {
     }
   };
 
-  const handleGoogleSignup = () => {
-    toast.error('Google sign-up is not connected yet. Use the form below.');
+  const handleGoogleSignup = async () => {
+    try {
+      const accessToken = await requestGoogleAccessToken();
+      const data = await googleAuthRequest({ accessToken });
+
+      if (!data.success) {
+        toast.error(data.message || 'Google sign-up failed.');
+        return;
+      }
+
+      saveAuthSession(data);
+      toast.success(data.message || 'Google account connected successfully.');
+      navigate('/');
+    } catch (error) {
+      toast.error(error?.message || 'Google sign-up failed.');
+    }
   };
 
   const strength = getPasswordStrength();

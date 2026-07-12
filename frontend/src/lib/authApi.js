@@ -24,3 +24,7 @@ export function loginRequest(payload) {
 export function signupRequest(payload) {
   return postAuth('/auth/signup', payload);
 }
+
+export function googleAuthRequest(payload) {
+  return postAuth('/auth/google', payload);
+}

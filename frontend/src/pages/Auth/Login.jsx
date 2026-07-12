@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { loginRequest } from '../../lib/authApi';
+import { loginRequest, googleAuthRequest } from '../../lib/authApi';
 import { hasAuthSession, saveAuthSession } from '../../lib/authSession';
+import { requestGoogleAccessToken } from '../../lib/googleAuth';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -40,8 +41,22 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    toast.error('Google sign-in is not connected yet. Use email and password.');
+  const handleGoogleLogin = async () => {
+    try {
+      const accessToken = await requestGoogleAccessToken();
+      const data = await googleAuthRequest({ accessToken });
+
+      if (!data.success) {
+        toast.error(data.message || 'Google sign-in failed.');
+        return;
+      }
+
+      saveAuthSession(data);
+      toast.success(`Successfully logged in as ${data.role === 'ADMIN' ? 'Admin' : 'Employee'}!`);
+      navigate('/');
+    } catch (error) {
+      toast.error(error?.message || 'Google sign-in failed.');
+    }
   };
 
   return (
