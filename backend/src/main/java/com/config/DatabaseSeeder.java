@@ -1,7 +1,7 @@
 package com.config;
 
 import com.entity.*;
-import com.enums.AssetStatus;
+import com.enums.*;
 import com.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Component
 @Order(2)
@@ -26,47 +27,64 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final ResourceRepository resourceRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // Seeding remaining tables
+    private final AssetAllocationRepository allocationRepository;
+    private final AssetTransferRequestRepository transferRepository;
+    private final MaintenanceRequestRepository maintenanceRepository;
+    private final AuditCycleRepository auditCycleRepository;
+    private final AuditEntryRepository auditEntryRepository;
+    private final ResourceBookingRepository bookingRepository;
+    private final NotificationRepository notificationRepository;
+    private final ActivityLogRepository activityLogRepository;
+
     @Override
     public void run(String... args) {
         try {
             seedRoles();
         } catch (Exception e) {
-            System.err.println("Skipping roles seeding: " + e.getMessage());
+            System.err.println("Skipping roles: " + e.getMessage());
         }
 
         try {
             seedDepartments();
         } catch (Exception e) {
-            System.err.println("Skipping departments seeding: " + e.getMessage());
+            System.err.println("Skipping departments: " + e.getMessage());
         }
 
         try {
             seedEmployeesAndUsers();
         } catch (Exception e) {
-            System.err.println("Skipping employees seeding: " + e.getMessage());
+            System.err.println("Skipping employees: " + e.getMessage());
         }
 
         try {
             seedCategories();
         } catch (Exception e) {
-            System.err.println("Skipping categories seeding: " + e.getMessage());
+            System.err.println("Skipping categories: " + e.getMessage());
         }
 
         try {
             seedAssets();
         } catch (Exception e) {
-            System.err.println("Skipping assets seeding: " + e.getMessage());
+            System.err.println("Skipping assets: " + e.getMessage());
         }
 
         try {
             seedResources();
         } catch (Exception e) {
-            System.err.println("Skipping resources seeding: " + e.getMessage());
+            System.err.println("Skipping resources: " + e.getMessage());
+        }
+
+        // Seeding remaining prototype logs and bookings
+        try {
+            seedRemainingPrototypeData();
+        } catch (Exception e) {
+            System.err.println("Skipping transactional prototype data: " + e.getMessage());
         }
     }
 
     private void seedRoles() {
-        if (roleRepository.count() <= 1) { // 1 is ADMIN created by AuthBootstrapper
+        if (roleRepository.count() <= 1) {
             getOrCreateRole("ASSET_MANAGER", "Asset management and lifecycles coordinator");
             getOrCreateRole("DEPARTMENT_HEAD", "Department head with request approval authority");
             getOrCreateRole("EMPLOYEE", "Regular employee with allocation holdings");
@@ -74,7 +92,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void seedDepartments() {
-        if (departmentRepository.count() <= 1) { // 1 is Administration
+        if (departmentRepository.count() <= 1) {
             getOrCreateDepartment("Engineering");
             getOrCreateDepartment("IT Operations");
             getOrCreateDepartment("Human Resources");
@@ -84,7 +102,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void seedEmployeesAndUsers() {
-        if (employeeRepository.count() <= 1) { // 1 is Admin
+        if (employeeRepository.count() <= 1) {
             Role managerRole = roleRepository.findByRoleNameIgnoreCase("ASSET_MANAGER").orElse(null);
             Role headRole = roleRepository.findByRoleNameIgnoreCase("DEPARTMENT_HEAD").orElse(null);
             Role empRole = roleRepository.findByRoleNameIgnoreCase("EMPLOYEE").orElse(null);
@@ -237,6 +255,154 @@ public class DatabaseSeeder implements CommandLineRunner {
                     .capacity(5)
                     .location("Basement Garage")
                     .status("Available")
+                    .build());
+        }
+    }
+
+    private void seedRemainingPrototypeData() {
+        if (allocationRepository.count() == 0) {
+            Asset macbook = assetRepository.findByAssetTagIgnoreCase("AF-001").orElse(null);
+            Asset chair = assetRepository.findByAssetTagIgnoreCase("AF-002").orElse(null);
+            Asset projector = assetRepository.findByAssetTagIgnoreCase("AF-003").orElse(null);
+
+            Employee priya = employeeRepository.findByEmail("priya@gmail.com").orElse(null);
+            Employee sarah = employeeRepository.findByEmail("sarah@gmail.com").orElse(null);
+            Employee ramesh = employeeRepository.findByEmail("ramesh@gmail.com").orElse(null);
+
+            Department engDept = departmentRepository.findByDepartmentNameIgnoreCase("Engineering").orElse(null);
+            Department itDept = departmentRepository.findByDepartmentNameIgnoreCase("IT Operations").orElse(null);
+
+            // Allocations
+            if (macbook != null && priya != null) {
+                macbook.setStatus(AssetStatus.ALLOCATED);
+                assetRepository.save(macbook);
+
+                allocationRepository.save(AssetAllocation.builder()
+                        .asset(macbook)
+                        .employee(priya)
+                        .department(engDept)
+                        .allocatedBy(ramesh)
+                        .allocatedDate(LocalDate.now().minusDays(15))
+                        .expectedReturnDate(LocalDate.now().plusDays(45))
+                        .status("Active")
+                        .conditionNotes("Excellent condition, pre-configured with dev profiles")
+                        .build());
+            }
+
+            if (chair != null && sarah != null) {
+                chair.setStatus(AssetStatus.ALLOCATED);
+                assetRepository.save(chair);
+
+                allocationRepository.save(AssetAllocation.builder()
+                        .asset(chair)
+                        .employee(sarah)
+                        .department(engDept)
+                        .allocatedBy(ramesh)
+                        .allocatedDate(LocalDate.now().minusDays(10))
+                        .expectedReturnDate(LocalDate.now().plusDays(90))
+                        .status("Active")
+                        .conditionNotes("Brand new alignment pins set")
+                        .build());
+            }
+
+            // Transfer Requests
+            if (macbook != null && priya != null && sarah != null) {
+                transferRepository.save(AssetTransferRequest.builder()
+                        .asset(macbook)
+                        .fromEmployee(priya)
+                        .toEmployee(sarah)
+                        .requestedBy(priya)
+                        .status(TransferStatus.REQUESTED)
+                        .remarks("Project reassignment to Creative team")
+                        .requestedDate(LocalDateTime.now().minusHours(4))
+                        .build());
+            }
+
+            // Maintenance Requests
+            if (projector != null && sarah != null) {
+                maintenanceRepository.save(MaintenanceRequest.builder()
+                        .asset(projector)
+                        .raisedBy(sarah)
+                        .issueDescription("Projector bulb not turning on, replacement required")
+                        .priority("High")
+                        .status(MaintenanceStatus.PENDING)
+                        .build());
+            }
+
+            // Audit Cycles & Entries
+            if (engDept != null && ramesh != null) {
+                AuditCycle cycle = auditCycleRepository.save(AuditCycle.builder()
+                        .auditName("Q3 Engineering Asset Verification")
+                        .department(engDept)
+                        .location("Bangalore HQ")
+                        .startDate(LocalDate.now().minusDays(5))
+                        .endDate(LocalDate.now().plusDays(10))
+                        .status(AuditStatus.IN_PROGRESS)
+                        .createdBy(ramesh)
+                        .build());
+
+                if (macbook != null) {
+                    auditEntryRepository.save(AuditEntry.builder()
+                            .audit(cycle)
+                            .asset(macbook)
+                            .auditor(ramesh)
+                            .verificationStatus(VerificationStatus.VERIFIED)
+                            .remarks("Verified at Desk E12")
+                            .verifiedAt(LocalDateTime.now().minusDays(1))
+                            .build());
+                }
+
+                if (chair != null) {
+                    auditEntryRepository.save(AuditEntry.builder()
+                            .audit(cycle)
+                            .asset(chair)
+                            .auditor(ramesh)
+                            .verificationStatus(VerificationStatus.DAMAGED)
+                            .remarks("Pending physical alignment scan")
+                            .build());
+                }
+            }
+
+            // Resource Bookings
+            Resource confB2 = resourceRepository.findAll().stream()
+                    .filter(r -> r.getResourceName().equals("Conference Room B2"))
+                    .findFirst().orElse(null);
+
+            if (confB2 != null && priya != null) {
+                bookingRepository.save(ResourceBooking.builder()
+                        .resource(confB2)
+                        .employee(priya)
+                        .department(engDept)
+                        .purpose("Engineering Sprint Design Review")
+                        .startDatetime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0))
+                        .endDatetime(LocalDateTime.now().plusDays(1).withHour(11).withMinute(0).withSecond(0))
+                        .status(BookingStatus.UPCOMING)
+                        .build());
+            }
+
+            // Notifications
+            if (priya != null) {
+                notificationRepository.save(Notification.builder()
+                        .employee(priya)
+                        .title("Asset Allocated Successfully")
+                        .message("MacBook Pro 16\" has been signed out and registered under your profile")
+                        .isRead(false)
+                        .build());
+            }
+
+            // Activity Logs
+            activityLogRepository.save(ActivityLog.builder()
+                    .module("ALLOCATION")
+                    .action("ALLOCATE")
+                    .description("MacBook Pro 16\" sign-out completed by Ramesh Varma for Priya Shah")
+                    .ipAddress("127.0.0.1")
+                    .build());
+
+            activityLogRepository.save(ActivityLog.builder()
+                    .module("MAINTENANCE")
+                    .action("CREATE")
+                    .description("Service ticket raised for Conference B2 Projector")
+                    .ipAddress("192.168.1.52")
                     .build());
         }
     }
