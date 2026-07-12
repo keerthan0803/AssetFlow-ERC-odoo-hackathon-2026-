@@ -28,3 +28,11 @@ export function signupRequest(payload) {
 export function googleAuthRequest(payload) {
   return postAuth('/auth/google', payload);
 }
+
+export function sendOtpRequest(payload) {
+  return postAuth('/auth/send-otp', payload);
+}
+
+export function verifyOtpRequest(payload) {
+  return postAuth('/auth/verify-otp', payload);
+}

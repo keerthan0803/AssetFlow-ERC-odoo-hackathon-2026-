@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 // Auth Pages
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
+import OtpVerification from './pages/Auth/OtpVerification';
 
 // App Pages
 import Dashboard from './pages/Dashboard/Dashboard';
@@ -42,6 +43,7 @@ export default function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/verify-otp" element={<OtpVerification />} />
         </Route>
 
         {/* Dashboard */}
