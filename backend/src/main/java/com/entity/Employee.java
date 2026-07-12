@@ -1,4 +1,4 @@
-package com.assetflow.backend.entity;
+package com.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

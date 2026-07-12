@@ -1,4 +1,4 @@
-package com.assetflow.backend.entity;
+package com.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,20 +8,20 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "asset_categories")
+@Table(name = "roles")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AssetCategory {
+public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "category_id")
+    @Column(name = "role_id")
     private Long id;
 
-    @Column(name = "category_name", nullable = false, unique = true)
-    private String categoryName;
+    @Column(name = "role_name", nullable = false, unique = true)
+    private String roleName;
 
     @Column(columnDefinition = "TEXT")
     private String description;

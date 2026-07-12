@@ -1,6 +1,6 @@
-package com.assetflow.backend.entity;
+package com.entity;
 
-import com.assetflow.backend.enums.MaintenanceStatus;
+import com.enums.MaintenanceStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

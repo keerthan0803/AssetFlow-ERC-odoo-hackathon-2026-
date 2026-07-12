@@ -1,4 +1,4 @@
-package com.assetflow.backend.entity;
+package com.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,36 +7,33 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "activity_logs")
+@Table(name = "notifications")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ActivityLog {
+public class Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "log_id")
+    @Column(name = "notification_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id")
+    @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
     @Column(nullable = false)
-    private String module;
+    private String title;
 
-    @Column(nullable = false)
-    private String action;
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String message;
 
-    @Column(name = "reference_id")
-    private String referenceId;
+    @Column(name = "notification_type")
+    private String notificationType;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "ip_address")
-    private String ipAddress;
+    @Column(name = "is_read", nullable = false)
+    private Boolean isRead = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
