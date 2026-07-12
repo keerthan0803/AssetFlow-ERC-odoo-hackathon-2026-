@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
+import RequireAuth from './components/RequireAuth';
 
 // Auth Pages
 import Login from './pages/Auth/Login';
@@ -45,39 +46,41 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
         </Route>
 
-        {/* Command Center Dashboard */}
-        <Route path="/" element={<Dashboard />} />
+        <Route element={<RequireAuth />}>
+          {/* Command Center Dashboard */}
+          <Route path="/" element={<Dashboard />} />
 
-        {/* Assets Overview */}
-        <Route path="/assets" element={<AssetList />} />
-        <Route path="/assets/:id" element={<AssetDetail />} />
+          {/* Assets Overview */}
+          <Route path="/assets" element={<AssetList />} />
+          <Route path="/assets/:id" element={<AssetDetail />} />
 
-        {/* AI Assistant Feed */}
-        <Route path="/assistant" element={<Assistant />} />
+          {/* AI Assistant Feed */}
+          <Route path="/assistant" element={<Assistant />} />
 
-        {/* Organization Directory */}
-        <Route path="/organization/departments" element={<Departments />} />
+          {/* Organization Directory */}
+          <Route path="/organization/departments" element={<Departments />} />
 
-        {/* Maintenance Center */}
-        <Route path="/maintenance" element={<Maintenance />} />
+          {/* Maintenance Center */}
+          <Route path="/maintenance" element={<Maintenance />} />
 
-        {/* Sustainability Dashboard */}
-        <Route path="/sustainability" element={<Sustainability />} />
+          {/* Sustainability Dashboard */}
+          <Route path="/sustainability" element={<Sustainability />} />
 
-        {/* Booking & Reservations */}
-        <Route path="/booking" element={<Booking />} />
+          {/* Booking & Reservations */}
+          <Route path="/booking" element={<Booking />} />
 
-        {/* Allocation & Transfer */}
-        <Route path="/allocation" element={<Allocation />} />
+          {/* Allocation & Transfer */}
+          <Route path="/allocation" element={<Allocation />} />
 
-        {/* Asset Audit */}
-        <Route path="/audit" element={<Audit />} />
+          {/* Asset Audit */}
+          <Route path="/audit" element={<Audit />} />
 
-        {/* Reports & Analytics */}
-        <Route path="/reports" element={<Reports />} />
+          {/* Reports & Analytics */}
+          <Route path="/reports" element={<Reports />} />
 
-        {/* Notifications */}
-        <Route path="/notifications" element={<Notifications />} />
+          {/* Notifications */}
+          <Route path="/notifications" element={<Notifications />} />
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />

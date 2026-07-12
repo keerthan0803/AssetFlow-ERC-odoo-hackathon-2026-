@@ -1,28 +1,47 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { loginRequest } from '../../lib/authApi';
+import { hasAuthSession, saveAuthSession } from '../../lib/authSession';
 
 export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('admin@assetflow.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleLogin = (e) => {
+  useEffect(() => {
+    if (hasAuthSession()) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email === 'admin@assetflow.com' && password === 'admin123') {
-      localStorage.setItem('af_logged_in_user', 'Admin');
-      toast.success('Successfully logged in as Admin!');
+    setSubmitting(true);
+
+    try {
+      const data = await loginRequest({ email, password });
+
+      if (!data.success) {
+        toast.error(data.message || 'Invalid credentials.');
+        return;
+      }
+
+      saveAuthSession(data);
+      toast.success(`Successfully logged in as ${data.role === 'ADMIN' ? 'Admin' : 'Employee'}!`);
       navigate('/');
-    } else {
-      toast.error('Invalid credentials. Use admin@assetflow.com / admin123');
+    } catch (error) {
+      toast.error(error?.message || 'Unable to sign in right now.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    localStorage.setItem('af_logged_in_user', 'Admin');
-    toast.success('Google Authentication matched! Welcome.');
-    navigate('/');
+    toast.error('Google sign-in is not connected yet. Use email and password.');
   };
 
   return (
@@ -147,7 +166,7 @@ export default function Login() {
                 type="submit"
                 className="w-full py-3.5 bg-black hover:bg-slate-800 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer group"
               >
-                Sign In
+                {submitting ? 'Signing In...' : 'Sign In'}
                 <span className="material-symbols-outlined text-lg font-bold transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
               </button>
             </form>
