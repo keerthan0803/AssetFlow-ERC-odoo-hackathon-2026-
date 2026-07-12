@@ -29,7 +29,7 @@ public class Asset {
     @Column(name = "asset_name", nullable = false)
     private String assetName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id", nullable = false)
     private AssetCategory category;
 
@@ -51,7 +51,7 @@ public class Asset {
 
     private String location;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id")
     private Department department;
 
