@@ -13,6 +13,20 @@ export default function Header({ title, showSearch = true, searchQuery = "", set
     { id: 3, text: "Overdue return alert: AF-0021", time: "1d ago", icon: "alarm", color: "text-red-700 bg-red-100" },
   ]);
 
+  const [userName, setUserName] = useState(() => localStorage.getItem('af_logged_in_user') || 'Sarah Chen');
+  const [profilePic, setProfilePic] = useState(() => localStorage.getItem('af_profile_pic') || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgA3en19Uc7ea6GxtX8VkAnlCbYVILldz29L747iD6rROHoLP92Oisl35Hbg1lw_wYabI96c677WjZ3pZLrKA2dOUsspcz6n9SH-lbiBVk_V0hcW65ECc9z_DtENK2mRrug1Rb3oVobEPNapqcghbzZO2hU8hkzKWipVZHAnJT4C8qyJB7BU4MUsi_D1-KQTy0ITT1ExoLO7g7NWLAuuYCYQEBxuXAxUljrAtVBqk2bC385UcW');
+  const [userRole, setUserRole] = useState(() => localStorage.getItem('af_user_role') || 'Ops Manager');
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUserName(localStorage.getItem('af_logged_in_user') || 'Sarah Chen');
+      setProfilePic(localStorage.getItem('af_profile_pic') || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgA3en19Uc7ea6GxtX8VkAnlCbYVILldz29L747iD6rROHoLP92Oisl35Hbg1lw_wYabI96c677WjZ3pZLrKA2dOUsspcz6n9SH-lbiBVk_V0hcW65ECc9z_DtENK2mRrug1Rb3oVobEPNapqcghbzZO2hU8hkzKWipVZHAnJT4C8qyJB7BU4MUsi_D1-KQTy0ITT1ExoLO7g7NWLAuuYCYQEBxuXAxUljrAtVBqk2bC385UcW');
+      setUserRole(localStorage.getItem('af_user_role') || 'Ops Manager');
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const handleMarkAllRead = () => {
     setUnreadCount(0);
     toast.success('All notifications marked as read.');
@@ -142,13 +156,13 @@ export default function Header({ title, showSearch = true, searchQuery = "", set
           className="flex items-center gap-3 cursor-pointer group"
         >
           <div className="text-right hidden sm:block">
-            <p className="text-xs text-slate-800 font-bold leading-none">Sarah Chen</p>
-            <p className="text-[9px] text-[#404946] leading-none mt-1">Ops Manager</p>
+            <p className="text-xs text-slate-800 font-bold leading-none">{userName}</p>
+            <p className="text-[9px] text-[#404946] leading-none mt-1">{userRole.replace('_', ' ')}</p>
           </div>
           <img 
             className="w-8 h-8 rounded-full object-cover border border-[#bfc9c5]/35 group-hover:opacity-90" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgA3en19Uc7ea6GxtX8VkAnlCbYVILldz29L747iD6rROHoLP92Oisl35Hbg1lw_wYabI96c677WjZ3pZLrKA2dOUsspcz6n9SH-lbiBVk_V0hcW65ECc9z_DtENK2mRrug1Rb3oVobEPNapqcghbzZO2hU8hkzKWipVZHAnJT4C8qyJB7BU4MUsi_D1-KQTy0ITT1ExoLO7g7NWLAuuYCYQEBxuXAxUljrAtVBqk2bC385UcW" 
-            alt="Sarah Profile" 
+            src={profilePic} 
+            alt="User Profile" 
           />
         </div>
       </div>

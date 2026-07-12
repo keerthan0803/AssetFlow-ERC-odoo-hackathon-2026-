@@ -4,7 +4,7 @@ import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 
 export default function Settings() {
-  const [appearanceMode, setAppearanceMode] = useState('light');
+  const [appearanceMode, setAppearanceMode] = useState(() => localStorage.getItem('af_theme') || 'light');
   const [language, setLanguage] = useState('English (US)');
   const [defaultPage, setDefaultPage] = useState('Dashboard');
   const [refreshInterval, setRefreshInterval] = useState(30);
@@ -87,7 +87,12 @@ export default function Settings() {
                       <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">Customize your default browser color scheme.</p>
                       <div className="flex p-0.5 bg-[#f4f4f1] rounded-xl border border-slate-200/50 w-fit">
                         <button 
-                          onClick={() => { setAppearanceMode('light'); toast.success('Light Mode active.'); }}
+                          onClick={() => { 
+                            setAppearanceMode('light'); 
+                            localStorage.setItem('af_theme', 'light');
+                            document.documentElement.classList.remove('dark-theme');
+                            toast.success('Light Mode active.'); 
+                          }}
                           className={`px-4 py-2 rounded-lg flex items-center gap-1.5 text-[10px] font-bold cursor-pointer transition-all ${
                             appearanceMode === 'light' ? 'bg-white text-[#00352d] shadow-sm' : 'text-slate-500'
                           }`}
@@ -95,7 +100,12 @@ export default function Settings() {
                           <span className="material-symbols-outlined text-xs">light_mode</span> Light
                         </button>
                         <button 
-                          onClick={() => { setAppearanceMode('dark'); toast.success('Dark Mode is simulated.'); }}
+                          onClick={() => { 
+                            setAppearanceMode('dark'); 
+                            localStorage.setItem('af_theme', 'dark');
+                            document.documentElement.classList.add('dark-theme');
+                            toast.success('Dark Mode active.'); 
+                          }}
                           className={`px-4 py-2 rounded-lg flex items-center gap-1.5 text-[10px] font-bold cursor-pointer transition-all ${
                             appearanceMode === 'dark' ? 'bg-white text-[#00352d] shadow-sm' : 'text-slate-500'
                           }`}

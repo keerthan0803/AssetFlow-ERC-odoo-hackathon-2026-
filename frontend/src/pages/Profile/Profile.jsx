@@ -5,7 +5,7 @@ import Header from '../../components/Header';
 
 export default function Profile() {
   const [is2FaEnabled, setIs2FaEnabled] = useState(true);
-  const [appearanceMode, setAppearanceMode] = useState('light');
+  const [appearanceMode, setAppearanceMode] = useState(() => localStorage.getItem('af_theme') || 'light');
   const [language, setLanguage] = useState('English (US)');
   const [notifications, setNotifications] = useState({
     email: true,
@@ -16,17 +16,18 @@ export default function Profile() {
   });
 
   // User details state
-  const [fullName, setFullName] = useState("Sarah Jacqueline Chen");
-  const [email, setEmail] = useState("sarah.chen@assetflow.corp");
-  const [phone, setPhone] = useState("+1 (555) 0123-4567");
-  const [location, setLocation] = useState("Singapore HQ - Tower B");
+  const [fullName, setFullName] = useState(() => localStorage.getItem('af_logged_in_user') || "Sarah Jacqueline Chen");
+  const [email, setEmail] = useState(() => localStorage.getItem('af_user_email') || "sarah.chen@assetflow.corp");
+  const [phone, setPhone] = useState(() => localStorage.getItem('af_user_phone') || "+1 (555) 0123-4567");
+  const [location, setLocation] = useState(() => localStorage.getItem('af_user_location') || "Singapore HQ - Tower B");
+  const [profilePic, setProfilePic] = useState(() => localStorage.getItem('af_profile_pic') || "https://lh3.googleusercontent.com/aida-public/AB6AXuAEhGD05nqOBGuK2c6w1SDZbJ4RD_jzNxhEsYTbQ5STMlULEhjT2zOyRGSBRyFzXAnT3Pm3GrTL-Vn_r0WJTO7kuUxgHsIP0SN5rIcAonNVxLuFiJOgjMQu8NsOufVBUd0SR7A2YgOD71m2z4Y_PScCSXcfmDIgcV6_jAWnWHsHFpA2hAvb1E-PmA0qTwV6K5zF_olakMQFEw6k2dnnK0IDDUbNyeujJSwrLIR0--lRpUyLoD2r");
   const [showEditDropdown, setShowEditDropdown] = useState(false);
 
   // Temporary inputs state to hold edits before saving
-  const [tempFullName, setTempFullName] = useState(fullName);
-  const [tempEmail, setTempEmail] = useState(email);
-  const [tempPhone, setTempPhone] = useState(phone);
-  const [tempLocation, setTempLocation] = useState(location);
+  const [tempFullName, setTempFullName] = useState(() => localStorage.getItem('af_logged_in_user') || "Sarah Jacqueline Chen");
+  const [tempEmail, setTempEmail] = useState(() => localStorage.getItem('af_user_email') || "sarah.chen@assetflow.corp");
+  const [tempPhone, setTempPhone] = useState(() => localStorage.getItem('af_user_phone') || "+1 (555) 0123-4567");
+  const [tempLocation, setTempLocation] = useState(() => localStorage.getItem('af_user_location') || "Singapore HQ - Tower B");
 
   const handleNotificationChange = (key) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
@@ -57,6 +58,14 @@ export default function Profile() {
     setEmail(tempEmail);
     setPhone(tempPhone);
     setLocation(tempLocation);
+
+    localStorage.setItem('af_logged_in_user', tempFullName);
+    localStorage.setItem('af_user_email', tempEmail);
+    localStorage.setItem('af_user_phone', tempPhone);
+    localStorage.setItem('af_user_location', tempLocation);
+
+    window.dispatchEvent(new Event('storage'));
+
     setShowEditDropdown(false);
     toast.success('Profile updated successfully!');
   };
@@ -98,12 +107,20 @@ export default function Profile() {
                 <div className="w-28 h-28 rounded-2xl border-4 border-white shadow-md overflow-hidden bg-white">
                   <img 
                     className="w-full h-full object-cover" 
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEhGD05nqOBGuK2c6w1SDZbJ4RD_jzNxhEsYTbQ5STMlULEhjT2zOyRGSBRyFzXAnT3Pm3GrTL-Vn_r0WJTO7kuUxgHsIP0SN5rIcAonNVxLuFiJOgjMQu8NsOufVBUd0SR7A2YgOD71m2z4Y_PScCSXcfmDIgcV6_jAWnWHsHFpA2hAvb1E-PmA0qTwV6K5zF_olakMQFEw6k2dnnK0IDDUbNyeujJSwrLIR0--lRpUyLoD2r" 
-                    alt="Sarah Headshot" 
+                    src={profilePic} 
+                    alt="Profile Headshot" 
                   />
                 </div>
                 <button 
-                  onClick={() => toast.success('Upload a new profile picture.')}
+                  onClick={() => {
+                    const url = window.prompt("Enter new Profile Image URL:", profilePic);
+                    if (url) {
+                      setProfilePic(url);
+                      localStorage.setItem('af_profile_pic', url);
+                      window.dispatchEvent(new Event('storage'));
+                      toast.success('Profile photo updated!');
+                    }
+                  }}
                   className="absolute bottom-1 right-1 bg-[#00352d] hover:bg-[#0d4d43] text-white p-1.5 rounded-lg shadow-md transition-transform cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">photo_camera</span>
@@ -419,8 +436,13 @@ export default function Profile() {
                         <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Switch interface modes</p>
                       </div>
                       <div className="flex p-0.5 bg-[#f4f4f1] rounded-xl border border-slate-200/50">
-                        <button 
-                          onClick={() => { setAppearanceMode('light'); toast.success('Light Mode active.'); }}
+                         <button 
+                          onClick={() => { 
+                            setAppearanceMode('light'); 
+                            localStorage.setItem('af_theme', 'light');
+                            document.documentElement.classList.remove('dark-theme');
+                            toast.success('Light Mode active.'); 
+                          }}
                           className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[10px] font-bold cursor-pointer transition-all ${
                             appearanceMode === 'light' ? 'bg-white text-[#00352d] shadow-sm' : 'text-slate-500 hover:text-slate-850'
                           }`}
@@ -428,7 +450,12 @@ export default function Profile() {
                           <span className="material-symbols-outlined text-xs">light_mode</span> Light
                         </button>
                         <button 
-                          onClick={() => { setAppearanceMode('dark'); toast.success('Dark Mode is simulated.'); }}
+                          onClick={() => { 
+                            setAppearanceMode('dark'); 
+                            localStorage.setItem('af_theme', 'dark');
+                            document.documentElement.classList.add('dark-theme');
+                            toast.success('Dark Mode active.'); 
+                          }}
                           className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-[10px] font-bold cursor-pointer transition-all ${
                             appearanceMode === 'dark' ? 'bg-white text-[#00352d] shadow-sm' : 'text-slate-500 hover:text-slate-850'
                           }`}
