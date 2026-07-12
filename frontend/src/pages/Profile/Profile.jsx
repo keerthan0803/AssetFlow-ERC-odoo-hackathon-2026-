@@ -20,7 +20,6 @@ export default function Profile() {
   const [email, setEmail] = useState(() => localStorage.getItem('af_user_email') || "sarah.chen@assetflow.corp");
   const [phone, setPhone] = useState(() => localStorage.getItem('af_user_phone') || "+1 (555) 0123-4567");
   const [location, setLocation] = useState(() => localStorage.getItem('af_user_location') || "Singapore HQ - Tower B");
-  const [profilePic, setProfilePic] = useState(() => localStorage.getItem('af_profile_pic') || "https://lh3.googleusercontent.com/aida-public/AB6AXuAEhGD05nqOBGuK2c6w1SDZbJ4RD_jzNxhEsYTbQ5STMlULEhjT2zOyRGSBRyFzXAnT3Pm3GrTL-Vn_r0WJTO7kuUxgHsIP0SN5rIcAonNVxLuFiJOgjMQu8NsOufVBUd0SR7A2YgOD71m2z4Y_PScCSXcfmDIgcV6_jAWnWHsHFpA2hAvb1E-PmA0qTwV6K5zF_olakMQFEw6k2dnnK0IDDUbNyeujJSwrLIR0--lRpUyLoD2r");
   const [showEditDropdown, setShowEditDropdown] = useState(false);
 
   // Temporary inputs state to hold edits before saving
@@ -104,27 +103,9 @@ export default function Profile() {
             {/* Hero Profile Card */}
             <div className="bg-white border border-[#bfc9c5]/40 rounded-2xl p-6 flex flex-col md:flex-row items-end gap-6 shadow-xs">
               <div className="relative -mt-20">
-                <div className="w-28 h-28 rounded-2xl border-4 border-white shadow-md overflow-hidden bg-white">
-                  <img 
-                    className="w-full h-full object-cover" 
-                    src={profilePic} 
-                    alt="Profile Headshot" 
-                  />
+                <div className="w-28 h-28 rounded-2xl border-4 border-white shadow-md overflow-hidden bg-slate-200 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-4xl text-slate-400">person</span>
                 </div>
-                <button 
-                  onClick={() => {
-                    const url = window.prompt("Enter new Profile Image URL:", profilePic);
-                    if (url) {
-                      setProfilePic(url);
-                      localStorage.setItem('af_profile_pic', url);
-                      window.dispatchEvent(new Event('storage'));
-                      toast.success('Profile photo updated!');
-                    }
-                  }}
-                  className="absolute bottom-1 right-1 bg-[#00352d] hover:bg-[#0d4d43] text-white p-1.5 rounded-lg shadow-md transition-transform cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-sm">photo_camera</span>
-                </button>
               </div>
 
               <div className="flex-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
