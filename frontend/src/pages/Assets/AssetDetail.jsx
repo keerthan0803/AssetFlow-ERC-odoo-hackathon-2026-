@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
+import Header from '../../components/Header';
 
 export default function AssetDetail() {
   const { id } = useParams();
@@ -43,41 +44,43 @@ export default function AssetDetail() {
     <div className="flex min-h-screen bg-[#FBFBFC] font-sans antialiased text-slate-800">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top Header */}
-        <header className="bg-white border-b border-slate-100 px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sticky top-0 z-40">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-indigo-600 font-mono uppercase tracking-wider text-[10px] font-bold">
-                Asset ID: {assetId}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[9px] text-emerald-700 font-bold border border-emerald-100 uppercase">
-                Operational
-              </span>
-            </div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight mt-1">Precision Core Facility A1</h1>
-          </div>
-          
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button 
-              onClick={() => toast.success('Exporting telemetry ledger to local storage…')}
-              className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-            >
-              <span className="material-symbols-outlined text-sm">download</span>
-              Export Report
-            </button>
-            <button 
-              onClick={() => toast.success('Opening system calibration console…')}
-              className="px-4 py-2 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-            >
-              <span className="material-symbols-outlined text-sm">settings</span>
-              Manage Configuration
-            </button>
-          </div>
-        </header>
+        {/* Reusable Header */}
+        <Header showSearch={false} title={`Asset Details: ${assetId}`} />
 
         {/* Page Content */}
         <div className="px-8 py-6 max-w-7xl w-full mx-auto space-y-6">
+          
+          {/* Top Title & Actions Row */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200/50 pb-5">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[#0d4d43] font-mono uppercase tracking-wider text-[10px] font-bold">
+                  Asset ID: {assetId}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[9px] text-emerald-700 font-bold border border-emerald-100 uppercase">
+                  Operational
+                </span>
+              </div>
+              <h1 className="text-xl font-black text-[#00352d] tracking-tight mt-1">Precision Core Facility A1</h1>
+            </div>
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button 
+                onClick={() => toast.success('Exporting telemetry ledger to local storage…')}
+                className="px-4 py-2 border border-[#bfc9c5] bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              >
+                <span className="material-symbols-outlined text-sm">download</span>
+                Export Report
+              </button>
+              <button 
+                onClick={() => toast.success('Opening system calibration console…')}
+                className="px-4 py-2 bg-[#00352d] hover:bg-[#0d4d43] text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              >
+                <span className="material-symbols-outlined text-sm">settings</span>
+                Manage Configuration
+              </button>
+            </div>
+          </div>
           
           {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pb-20">

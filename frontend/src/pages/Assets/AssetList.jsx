@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
+import Header from '../../components/Header';
 
 const INITIAL_ASSETS = [
   { tag: 'AF-0012', name: 'Dell Latitude 5420', category: 'Electronics', status: 'Allocated', location: 'Bengaluru, KA', dept: 'Engineering', health: 88 },
@@ -85,45 +86,8 @@ export default function AssetList() {
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
-        {/* Top Header */}
-        <header className="sticky top-0 z-40 h-16 flex justify-between items-center px-8 w-full backdrop-blur-md border-b border-[#bfc9c5]/30 bg-[#F9F9F7]/30">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative max-w-md w-full">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-              <input 
-                type="text" 
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search by tag, serial, or QR code..." 
-                className="w-full bg-white border border-[#bfc9c5]/50 rounded-lg pl-10 pr-4 py-2 text-xs focus:ring-2 focus:ring-[#00352d]/10 focus:border-[#00352d] transition-all outline-none text-[#1a1c1b]"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <button className="relative text-[#404946] hover:bg-white/10 p-2 rounded-full transition-all">
-              <span className="material-symbols-outlined text-lg">notifications</span>
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#ba1a1a] rounded-full border border-white"></span>
-            </button>
-            <button className="text-[#404946] hover:bg-white/10 p-2 rounded-full transition-all">
-              <span className="material-symbols-outlined text-lg">settings</span>
-            </button>
-            <div className="h-6 w-[1px] bg-[#bfc9c5]/60 mx-1"></div>
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs text-slate-800 font-bold leading-none">Marcus Thorne</p>
-                <p className="text-[9px] text-[#404946] leading-none mt-1">Admin Principal</p>
-              </div>
-              <div className="w-9 h-9 rounded-full border-2 border-[#00352d]/25 p-0.5 overflow-hidden flex-shrink-0">
-                <img 
-                  className="w-full h-full object-cover rounded-full" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC63sWcaTdnoQpxB5zDNKNEfHxkgLIhD3EKz6VqOdbw-1WygCSHYjya9pNLFo7Du1-DX8DK2Y2qNQjJh48o0ScksAhm-0H4bsRqH8WNZjp6lGMuUkL6PDWX326zzZr6srCaxo_jFc6TjQUL3F_I50kVNmnAwTEQll-37afIE63kcWt4O-AKiBx-hDFLYKmJBy_NwiQnEr0cccHqeBRX8ABqfWgAhvVLIuUV7IjXNMlmSBAsygPqqY0u" 
-                  alt="Marcus Thorne Profile" 
-                />
-              </div>
-            </div>
-          </div>
-        </header>
+        {/* Reusable Header */}
+        <Header showSearch={true} searchQuery={search} setSearchQuery={setSearch} placeholder="Search by tag, serial, or QR code..." />
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-8 text-left pb-24 scrollbar-thin scrollbar-thumb-slate-200">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
+import Header from '../../components/Header';
 
 const INITIAL_TICKETS = [
   { id: 'AF-0062', title: 'Projector bulb not turning on', desc: 'Main briefing hall projector bulb fails to ignite. Spare bulb in supply cabinet.', status: 'Pending', priority: 'High', time: 'Reported 2h ago', assignee: '' },
@@ -59,44 +60,8 @@ export default function Maintenance() {
       <Sidebar />
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        
-        {/* Top App Bar */}
-        <header className="sticky top-0 z-40 h-16 bg-[#F9F9F7]/80 backdrop-blur-md border-b border-[#bfc9c5]/30 flex items-center justify-between px-8 w-full">
-          <div className="flex items-center gap-4 flex-1 max-w-2xl">
-            <div className="relative w-full">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-450 text-base">search</span>
-              <input 
-                type="text" 
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search maintenance tickets, assets, or technicians..." 
-                className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-xl pl-9 pr-4 py-2 text-xs focus:ring-2 focus:ring-[#00352d]/10 focus:border-[#00352d] transition-all outline-none text-[#1a1c1b]"
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4 ml-8">
-            <button className="p-2 rounded-full hover:bg-slate-100 text-[#404946] relative">
-              <span className="material-symbols-outlined text-lg">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#ba1a1a] rounded-full border border-white"></span>
-            </button>
-            <button className="p-2 rounded-full hover:bg-slate-100 text-[#404946]">
-              <span className="material-symbols-outlined text-lg">settings</span>
-            </button>
-            <div className="h-6 w-px bg-[#bfc9c5]/50 mx-1"></div>
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs text-slate-800 font-bold leading-none">James Wilson</p>
-                <p className="text-[9px] text-[#404946] leading-none mt-1">Fleet Manager</p>
-              </div>
-              <img 
-                className="w-8.5 h-8.5 rounded-full border border-outline-variant object-cover" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOg2kjc3RP1RHpIJLoMNQ8zpI82u1RzYU3GuZMPTlpWsvjpJNjiifzuqrJgzWmf5gfYfLmCF23KahZ3pKLRGSLv9L7HcOc95yWPcfrO0_L_3QAU5mk2laTuB2mmWuQkUbcO8GZf5lerqQZc5DArBmZL3DW_GyuzSkGKp84jn5rhhFuwCxlzLNnbOEPEcvZBP-9Q2Her2lk6GmhciP9gvZGnGuE2HK-GrzM_6Q9EYPJlp7o1akU2YDx" 
-                alt="James Wilson" 
-              />
-            </div>
-          </div>
-        </header>
+               {/* Reusable Header */}
+        <Header showSearch={true} searchQuery={searchQuery} setSearchQuery={setSearchQuery} placeholder="Search maintenance tickets, assets, or technicians..." />
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-8 text-left pb-24 scrollbar-thin scrollbar-thumb-slate-200">
