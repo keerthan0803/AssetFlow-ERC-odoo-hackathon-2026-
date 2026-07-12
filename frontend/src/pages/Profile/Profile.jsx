@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
+import Header from '../../components/Header';
 
 export default function Profile() {
   const [is2FaEnabled, setIs2FaEnabled] = useState(true);
@@ -14,12 +15,50 @@ export default function Profile() {
     audit: false,
   });
 
+  // User details state
+  const [fullName, setFullName] = useState("Sarah Jacqueline Chen");
+  const [email, setEmail] = useState("sarah.chen@assetflow.corp");
+  const [phone, setPhone] = useState("+1 (555) 0123-4567");
+  const [location, setLocation] = useState("Singapore HQ - Tower B");
+  const [showEditDropdown, setShowEditDropdown] = useState(false);
+
+  // Temporary inputs state to hold edits before saving
+  const [tempFullName, setTempFullName] = useState(fullName);
+  const [tempEmail, setTempEmail] = useState(email);
+  const [tempPhone, setTempPhone] = useState(phone);
+  const [tempLocation, setTempLocation] = useState(location);
+
   const handleNotificationChange = (key) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleEditProfile = () => {
-    toast.success('Edit Profile modal is active.');
+  const handleEditToggle = () => {
+    if (!showEditDropdown) {
+      // Load current values into inputs when opening
+      setTempFullName(fullName);
+      setTempEmail(email);
+      setTempPhone(phone);
+      setTempLocation(location);
+    }
+    setShowEditDropdown(!showEditDropdown);
+  };
+
+  const handleSaveEdits = (e) => {
+    e.preventDefault();
+    if (!tempFullName.trim()) {
+      toast.error('Full Name cannot be empty.');
+      return;
+    }
+    if (!tempEmail.trim()) {
+      toast.error('Email Address cannot be empty.');
+      return;
+    }
+    setFullName(tempFullName);
+    setEmail(tempEmail);
+    setPhone(tempPhone);
+    setLocation(tempLocation);
+    setShowEditDropdown(false);
+    toast.success('Profile updated successfully!');
   };
 
   const handleShare = () => {
@@ -40,34 +79,8 @@ export default function Profile() {
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
-        {/* TopNavBar */}
-        <header className="sticky top-0 z-40 h-16 bg-[#F9F9F7]/80 backdrop-blur-md border-b border-[#bfc9c5]/30 flex justify-between items-center px-8 w-full">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-black text-[#00352d] tracking-tight">User Profile</h2>
-          </div>
-          
-          <div className="flex items-center gap-6">
-            <button className="relative text-[#404946] hover:text-[#00352d] transition-colors cursor-pointer">
-              <span className="material-symbols-outlined text-lg">notifications</span>
-              <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#ba1a1a] rounded-full border border-white"></span>
-            </button>
-            <button className="text-[#404946] hover:text-[#00352d] transition-colors cursor-pointer">
-              <span className="material-symbols-outlined text-lg">settings</span>
-            </button>
-            <div className="h-6 w-[1px] bg-[#bfc9c5]/60 mx-1"></div>
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs text-slate-800 font-bold leading-none">Sarah Chen</p>
-                <p className="text-[9px] text-[#404946] leading-none mt-1">Ops Manager</p>
-              </div>
-              <img 
-                className="w-8 h-8 rounded-full object-cover border border-[#bfc9c5]/35 group-hover:opacity-90" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgA3en19Uc7ea6GxtX8VkAnlCbYVILldz29L747iD6rROHoLP92Oisl35Hbg1lw_wYabI96c677WjZ3pZLrKA2dOUsspcz6n9SH-lbiBVk_V0hcW65ECc9z_DtENK2mRrug1Rb3oVobEPNapqcghbzZO2hU8hkzKWipVZHAnJT4C8qyJB7BU4MUsi_D1-KQTy0ITT1ExoLO7g7NWLAuuYCYQEBxuXAxUljrAtVBqk2bC385UcW" 
-                alt="Sarah Profile" 
-              />
-            </div>
-          </div>
-        </header>
+        {/* Reusable Header */}
+        <Header title="User Profile" showSearch={false} />
 
         {/* Scrollable Canvas */}
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#F9F9F7] text-left pb-24">
@@ -100,7 +113,7 @@ export default function Profile() {
               <div className="flex-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h3 className="text-xl font-black text-[#00352d] tracking-tight">Sarah Chen</h3>
+                    <h3 className="text-xl font-black text-[#00352d] tracking-tight">{fullName}</h3>
                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-250 text-emerald-700 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1">
                       <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full"></span>
                       Active
@@ -113,7 +126,7 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 relative">
                   <button 
                     onClick={handleShare}
                     className="px-4 py-2 border border-[#bfc9c5] hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
@@ -121,13 +134,87 @@ export default function Profile() {
                     <span className="material-symbols-outlined text-base">share</span>
                     Share
                   </button>
-                  <button 
-                    onClick={handleEditProfile}
-                    className="px-4 py-2 bg-[#00352d] hover:bg-[#0d4d43] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-base">edit</span>
-                    Edit Profile
-                  </button>
+                  
+                  {/* Edit Profile Dropdown Trigger */}
+                  <div className="relative">
+                    <button 
+                      onClick={handleEditToggle}
+                      className="px-4 py-2 bg-[#00352d] hover:bg-[#0d4d43] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-base">edit</span>
+                      Edit Profile
+                      <span className={`material-symbols-outlined text-sm transition-transform ${showEditDropdown ? 'rotate-180' : ''}`}>expand_more</span>
+                    </button>
+
+                    {/* Responsive Edit Dropdown Box */}
+                    {showEditDropdown && (
+                      <div className="absolute right-0 mt-2 w-80 bg-white border border-[#bfc9c5]/60 shadow-xl rounded-2xl p-5 z-50 text-left animate-slide-up space-y-4">
+                        <div>
+                          <h4 className="text-xs font-black uppercase text-[#00352d] tracking-wider">Modify Details</h4>
+                          <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Edit your organization profile fields</p>
+                        </div>
+
+                        <form onSubmit={handleSaveEdits} className="space-y-3.5">
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-450 uppercase tracking-wide">Full Name</label>
+                            <input 
+                              type="text" 
+                              value={tempFullName}
+                              onChange={e => setTempFullName(e.target.value)}
+                              className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#00352d]"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-450 uppercase tracking-wide">Email Address</label>
+                            <input 
+                              type="email" 
+                              value={tempEmail}
+                              onChange={e => setTempEmail(e.target.value)}
+                              className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#00352d]"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-450 uppercase tracking-wide">Phone Number</label>
+                            <input 
+                              type="text" 
+                              value={tempPhone}
+                              onChange={e => setTempPhone(e.target.value)}
+                              className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#00352d]"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-450 uppercase tracking-wide">Office Location</label>
+                            <input 
+                              type="text" 
+                              value={tempLocation}
+                              onChange={e => setTempLocation(e.target.value)}
+                              className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#00352d]"
+                            />
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-2">
+                            <button 
+                              type="button" 
+                              onClick={() => setShowEditDropdown(false)}
+                              className="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-650 font-bold rounded-xl text-[10px] uppercase tracking-wider cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                            <button 
+                              type="submit" 
+                              className="px-3.5 py-2 bg-[#00352d] hover:bg-[#0d4d43] text-white font-bold rounded-xl text-[10px] uppercase tracking-wider cursor-pointer"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -166,19 +253,19 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Full Name</p>
-                      <p className="text-xs font-bold text-slate-800">Sarah Jacqueline Chen</p>
+                      <p className="text-xs font-bold text-slate-800">{fullName}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Email Address</p>
-                      <p className="text-xs font-bold text-slate-800">sarah.chen@assetflow.corp</p>
+                      <p className="text-xs font-bold text-slate-800">{email}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Phone Number</p>
-                      <p className="text-xs font-bold text-slate-800">+1 (555) 0123-4567</p>
+                      <p className="text-xs font-bold text-slate-800">{phone}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Office Location</p>
-                      <p className="text-xs font-bold text-slate-800">Singapore HQ - Tower B</p>
+                      <p className="text-xs font-bold text-slate-800">{location}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Department</p>

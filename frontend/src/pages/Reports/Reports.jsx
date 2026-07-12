@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
+import Header from '../../components/Header';
 
 export default function Reports() {
   const [trendsRange, setTrendsRange] = useState('Last 6 Months');
@@ -43,36 +44,27 @@ export default function Reports() {
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
-        {/* Top App Bar */}
-        <header className="sticky top-0 z-40 h-16 bg-[#F9F9F7]/80 backdrop-blur-md border-b border-[#bfc9c5]/30 flex justify-between items-center px-8 w-full">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-black text-[#00352d] tracking-tight">Reports & Analytics</h2>
-            <div className="hidden md:block h-6 w-[1px] bg-[#bfc9c5]/60 mx-1"></div>
-            <p className="hidden md:block text-[11px] text-slate-400 font-bold uppercase tracking-wider">Real-time operational efficiency metrics</p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <button className="relative p-2 text-[#404946] hover:text-[#00352d] transition-colors cursor-pointer rounded-full hover:bg-slate-50">
-              <span className="material-symbols-outlined text-lg">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#ba1a1a] rounded-full border border-white"></span>
-            </button>
-            <button className="p-2 text-[#404946] hover:text-[#00352d] transition-colors cursor-pointer rounded-full hover:bg-slate-50">
-              <span className="material-symbols-outlined text-lg">settings</span>
-            </button>
-            <div className="h-6 w-[1px] bg-[#bfc9c5]/60 mx-1"></div>
-            <button 
-              onClick={handleExport}
-              className="bg-[#00352d] hover:bg-[#0d4d43] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-sm"
-            >
-              <span className="material-symbols-outlined text-base">download</span>
-              Export Comprehensive Report
-            </button>
-          </div>
-        </header>
+        {/* Reusable Header */}
+        <Header showSearch={false} title="Reports & Analytics" />
 
         {/* Scrollable Container */}
         <div className="flex-1 overflow-y-auto p-8 text-left pb-24 scrollbar-thin scrollbar-thumb-slate-200">
           <div className="max-w-[1080px] mx-auto space-y-6">
+            
+            {/* Page Header Row */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/50">
+              <div>
+                <h1 className="text-xl font-black text-[#00352d] tracking-tight">Reports & Analytics</h1>
+                <p className="text-xs text-[#404946]/70 font-semibold mt-1">Real-time operational efficiency metrics and department utilization reports.</p>
+              </div>
+              <button 
+                onClick={handleExport}
+                className="bg-[#00352d] hover:bg-[#0d4d43] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <span className="material-symbols-outlined text-base">download</span>
+                Export Comprehensive Report
+              </button>
+            </div>
             
             {/* Top Row: Visualization Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

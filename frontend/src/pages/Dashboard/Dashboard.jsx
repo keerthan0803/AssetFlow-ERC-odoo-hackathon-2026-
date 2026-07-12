@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
+import Header from '../../components/Header';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -29,47 +30,8 @@ export default function Dashboard() {
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
-        {/* TopNavBar */}
-        <header className="sticky top-0 z-40 flex justify-between items-center w-full px-8 py-3 bg-[#F9F9F7] border-b border-[#bfc9c5]/40 shadow-xs">
-          <div className="flex items-center gap-8 flex-1">
-            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-md">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#404946] opacity-60 text-base">search</span>
-              <input 
-                type="text"
-                placeholder="Search assets, rooms, or requests..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-[#f4f4f1] border-none rounded-full py-2.5 pl-12 pr-4 text-xs focus:ring-2 focus:ring-[#00352d] outline-none transition-all placeholder:text-[#404946]/50 text-[#1a1c1b]" 
-              />
-            </form>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/notifications')}
-              className="material-symbols-outlined p-2 rounded-full text-[#404946] hover:bg-[#f4f4f1] transition-colors text-lg relative"
-            >
-              notifications
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-red-500" />
-            </button>
-            <button 
-              onClick={() => toast.success('Settings console initialized.')}
-              className="material-symbols-outlined p-2 rounded-full text-[#404946] hover:bg-[#f4f4f1] transition-colors text-lg"
-            >
-              settings
-            </button>
-            <div className="h-6 w-px bg-[#bfc9c5]/60 mx-1" />
-            <div className="flex items-center gap-2 cursor-pointer hover:bg-[#f4f4f1] p-1 rounded-full transition-colors">
-              <div className="w-9 h-9 rounded-full border-2 border-[#b3eee0] overflow-hidden">
-                <img 
-                  className="w-full h-full object-cover" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx-aYNuMHnK-OfIRzsZuFBSJRg5e9N244KJYHnPEhhFoLYjidnDaZ87qek-mhoxf_IGua8aOwmmOQFDXxnKo1cxJOiONNTrCrQMTfdoz8kdcHzWBP2_KQ21XDeuMpxl-5NdYrMYoLJY6yppeFYjiIMl62Wlq1clNnPN57H82EN5aqIZ49xjqVz1NfSAggWthedpN-rcjblR-zB0AF9znhFp_PPePCI9NoXNQ5nZGIGT93odfCpPRUA"
-                  alt="Profile Avatar"
-                />
-              </div>
-            </div>
-          </div>
-        </header>
+        {/* Reusable Header */}
+        <Header showSearch={true} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
         {/* Main Canvas Area */}
         <div className="flex-1 overflow-y-auto p-8 space-y-6 text-left pb-20">

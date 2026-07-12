@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
+import Header from '../../components/Header';
 
 const INITIAL_DEPARTMENTS = [
   { id: 1, name: 'Engineering', count: 42, icon: 'terminal', head: 'Aditi Rao', headImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAvxmqPvk4FTnFR6Uk43foqZV_1b_5yyaexfmI6IYl8h2Dobee4jBaCvqA6a6K6iubhXPodDGEaNcIsyqrgEBEy9GOPqwIzhRHLxHf8pQl_G-_sctFn8wuJhJSDSAdqvUj76jqK0_eF2jC-htOHUlcXjBJecv7Nbu4hlmC-ODlHvJdNthT05D57XdeB0sVyiKFNGscK0A5WQJfFsubqd-MbP2xVLftNxZJx9txyq2jCgMz6ERILePC8', parentDept: '—', status: 'Active' },
@@ -109,33 +110,8 @@ export default function Departments() {
       <Sidebar />
 
       <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top Header Shell */}
-        <header className="sticky top-0 z-40 bg-[#F9F9F7]/80 backdrop-blur-md border-b border-[#bfc9c5]/30 flex justify-between items-center px-8 py-3 w-full">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative w-full max-w-md group">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00352d] transition-colors text-base">search</span>
-              <input 
-                type="text" 
-                placeholder="Search organization tree..." 
-                className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-lg pl-9 pr-4 py-2 text-xs focus:ring-2 focus:ring-[#00352d]/25 focus:border-[#00352d] transition-all outline-none text-[#1a1c1b]"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl text-[#404946] hover:bg-[#f4f4f1] transition-all relative">
-              <span className="material-symbols-outlined text-base">notifications</span>
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#ba1a1a] rounded-full border border-[#f9f9f7]"></span>
-            </button>
-            <div className="h-6 w-px bg-[#bfc9c5]/50 mx-1"></div>
-            <div className="flex items-center gap-3 pl-1 cursor-pointer">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs text-on-surface font-bold leading-none">Admin User</p>
-                <p className="text-[9px] text-[#404946] uppercase tracking-wider mt-1">Enterprise Admin</p>
-              </div>
-              <img className="w-8.5 h-8.5 rounded-full object-cover ring-2 ring-[#00352d]/10" alt="Admin Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4hWnLBb7C_-KFncW83KR9PFiy9Fj1Sax1sPXWnRgpRtUF-dVt8F-W0iIhfneXgAcfSWVZk8uFWAiq8tynhOt98JWUia3v1vU9l8QTt5vdt3f2od86jxWJ1hexGJWTBQOjj1g3mb_G7mDe3-S-m8DwXC_9Ucu0NwObG2clSZ7DzgSK8mhNYGNst1nEY7B09YTWo5EZpyvCpueEmaPzIvQmylhuMUBCSOk8lk-7bJNTCjvbX5vKrbVy" />
-            </div>
-          </div>
-        </header>
+        {/* Reusable Header */}
+        <Header showSearch={true} placeholder="Search organization tree..." />
 
         {/* Page Content */}
         <div className="px-8 py-6 max-w-7xl w-full mx-auto space-y-6 text-left pb-20">

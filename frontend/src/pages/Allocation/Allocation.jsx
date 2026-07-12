@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
+import Header from '../../components/Header';
 
 const ASSET_OPTIONS = [
   { tag: 'AF-0114', label: 'AF-0114 - Dell Laptop', type: 'Compute Node', serial: 'DE-L29384X1', warranty: 'Active (24m left)', value: '$2,450.00', allocatedTo: 'Priya Shah', dept: 'Engineering', status: 'Allocated' },
@@ -57,44 +58,8 @@ export default function Allocation() {
 
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
 
-        {/* TopNavBar */}
-        <header className="sticky top-0 z-40 h-16 bg-[#F9F9F7]/80 backdrop-blur-md border-b border-[#bfc9c5]/30 flex justify-between items-center px-8 w-full">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative w-full max-w-md group">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00352d] transition-colors text-base">search</span>
-              <input
-                type="text"
-                placeholder="Search assets, requests, or employees..."
-                className="w-full bg-[#f4f4f1] border border-[#bfc9c5]/50 rounded-lg pl-9 pr-4 py-2 text-xs focus:ring-2 focus:ring-[#00352d]/10 focus:border-[#00352d] transition-all outline-none text-[#1a1c1b]"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/notifications')}
-              className="relative text-[#404946] hover:text-[#00352d] transition-colors cursor-pointer p-2 rounded-full hover:bg-[#f4f4f1]"
-            >
-              <span className="material-symbols-outlined text-lg">notifications</span>
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#ba1a1a] rounded-full border border-white"></span>
-            </button>
-            <button className="text-[#404946] hover:text-[#00352d] transition-colors cursor-pointer p-2 rounded-full hover:bg-[#f4f4f1]">
-              <span className="material-symbols-outlined text-lg">settings</span>
-            </button>
-            <div className="h-6 w-[1px] bg-[#bfc9c5]/60 mx-1"></div>
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs text-slate-800 font-bold leading-none">Workspace A</p>
-                <p className="text-[9px] text-[#404946] leading-none mt-1">Global Controller</p>
-              </div>
-              <img
-                className="w-8 h-8 rounded-full object-cover border-2 border-[#b3eee0]/60 group-hover:opacity-90"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJdUhP-ngkDiUwAl5KtSonIbNcBTCA_GnVg3byPa3-QqHh7GY0dNmjE9TQ3WgZxJy8iWogpq5zp7cQUaf9rtL3Wqo5tKWwu32DhPwieg717owAkiX7WpDfCdUtORR1nsqp_DHToJMqBNAM69PfTOFwkdfVnscJCSHDHgsxxBUP6Ok7N-YKG-WWpw0nbfp6y9m7oDVZEuCbNsCEUxoflP2vOzSdRaFb-_fCjQfNB0-61q-28jbSpAdw"
-                alt="Admin"
-              />
-            </div>
-          </div>
-        </header>
+        {/* Reusable Header */}
+        <Header showSearch={true} placeholder="Search assets, requests, or employees..." />
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-8 text-left pb-24 scrollbar-thin scrollbar-thumb-slate-200">
