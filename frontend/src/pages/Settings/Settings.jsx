@@ -255,32 +255,6 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* System Status Dashboard */}
-                <div className="bg-white border border-[#bfc9c5]/40 rounded-2xl p-6 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider">Node Status</h3>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-[9px] text-emerald-700 font-black tracking-wider uppercase border border-emerald-250">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></span>
-                      Online
-                    </div>
-                  </div>
-
-                  <div className="space-y-3.5 pt-2">
-                    {[
-                      { label: 'Asset Database Size', val: '1.45 GB', sub: 'Postgres Core' },
-                      { label: 'API Connection Latency', val: '42 ms', sub: 'Average node time' },
-                      { label: 'Build Version', val: 'v1.4.2-prod', sub: 'React client environment' },
-                    ].map(node => (
-                      <div key={node.label} className="flex justify-between items-center text-xs">
-                        <div className="text-left">
-                          <p className="font-bold text-slate-800 leading-none">{node.label}</p>
-                          <p className="text-[9px] text-slate-400 font-semibold mt-1">{node.sub}</p>
-                        </div>
-                        <span className="font-bold font-mono text-[#00352d]">{node.val}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
               </div>
 
