@@ -115,11 +115,7 @@ export default function Signup() {
           </div>
         </div>
 
-        {/* Left side footer stats */}
-        <div className="relative z-10 flex justify-between items-center text-[10px] text-slate-400 font-bold tracking-widest font-mono border-t border-white/5 pt-4">
-          <span>AES-256 ENCRYPTED</span>
-          <span>V4.2.1-STABLE</span>
-        </div>
+
       </section>
 
       {/* Right Column: Register Card */}
