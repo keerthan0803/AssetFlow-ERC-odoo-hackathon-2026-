@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import Sidebar from '../../components/Sidebar';
 
 export default function AssetDetail() {
   const { id } = useParams();
@@ -11,30 +12,22 @@ export default function AssetDetail() {
   const [activityTiles, setActivityTiles] = useState([]);
   const [isAiGlow, setIsAiGlow] = useState(false);
 
-  // Authentication check
-  useEffect(() => {
-    const user = localStorage.getItem('af_logged_in_user');
-    if (!user) {
-      navigate('/login');
-    }
-  }, [navigate]);
-
   // Generate GitHub style heatmap logs
   useEffect(() => {
     const tiles = [];
-    const intensities = ['bg-white/5', 'bg-primary/20', 'bg-primary/40', 'bg-primary/70', 'bg-primary'];
+    const intensities = [
+      'bg-slate-100 hover:bg-slate-200', 
+      'bg-indigo-100 hover:bg-indigo-200', 
+      'bg-indigo-300 hover:bg-indigo-400', 
+      'bg-indigo-500 hover:bg-indigo-600', 
+      'bg-indigo-700 hover:bg-indigo-800'
+    ];
     for (let i = 0; i < 364; i++) {
       const intensity = Math.floor(Math.random() * 5);
       tiles.push({ id: i, className: intensities[intensity] });
     }
     setActivityTiles(tiles);
   }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('af_logged_in_user');
-    toast.success('Successfully logged out.');
-    navigate('/login');
-  };
 
   const handleAiSend = (e) => {
     e.preventDefault();
@@ -47,481 +40,268 @@ export default function AssetDetail() {
   };
 
   return (
-    <div 
-      className="bg-background text-on-surface font-body-lg min-h-screen selection:bg-primary selection:text-on-primary w-full"
-      style={{ backgroundColor: '#11131b', color: '#e1e2ed', fontFamily: "'Inter', sans-serif" }}
-    >
-      <style>{`
-        .glass-panel {
-          backdrop-filter: blur(12px);
-          background: rgba(30, 41, 59, 0.5);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-        }
-        .github-style-tile {
-          aspect-ratio: 1/1;
-          transition: all 0.2s ease;
-        }
-        .github-style-tile:hover {
-          transform: scale(1.15);
-          z-index: 10;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-          height: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.02);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 2px;
-        }
-        .scanline {
-          background: linear-gradient(to bottom, transparent 50%, rgba(180, 197, 255, 0.05) 50%);
-          background-size: 100% 4px;
-        }
-      `}</style>
+    <div className="flex min-h-screen bg-[#FBFBFC] font-sans antialiased text-slate-800">
+      <Sidebar />
 
-      {/* Top Navigation Bar */}
-      <header className="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-surface/50 backdrop-blur-xl border-b border-white/5 shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-bold text-primary" style={{ color: '#b4c5ff' }}>AssetFlow</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-6 mr-6">
-            <Link to="/" className="text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors" style={{ color: '#c3c6d7' }}>Dashboard</Link>
-            <Link to="/assets" className="text-sm font-semibold text-primary transition-colors" style={{ color: '#b4c5ff' }}>Assets</Link>
-            <Link to="/booking" className="text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors" style={{ color: '#c3c6d7' }}>Reservations</Link>
-            <Link to="/assistant" className="text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors" style={{ color: '#c3c6d7' }}>Assistant</Link>
-            <Link to="/organization/departments" className="text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors" style={{ color: '#c3c6d7' }}>Organization</Link>
-            <Link to="/maintenance" className="text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors" style={{ color: '#c3c6d7' }}>Maintenance</Link>
-            <Link to="/sustainability" className="text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors" style={{ color: '#c3c6d7' }}>Sustainability</Link>
-            <Link to="/audit" className="text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors" style={{ color: '#c3c6d7' }}>Audit</Link>
-          </div>
-          <button 
-            onClick={() => toast.success('Diagnostics feed is nominal.')}
-            className="p-2 rounded-full hover:bg-white/5 transition-all text-on-surface-variant cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-lg" style={{ color: '#c3c6d7' }}>notifications</span>
-          </button>
-          <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center border border-white/10 overflow-hidden">
-            <img 
-              className="w-full h-full object-cover" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBK5B8tw4DVOcY-BWu1BEQp4T48sfyWVM32pGUKdKtCdsvRK-HMO1xE1LSa0tjq2lveO5wqUrWG9D0L88tmNiBYZk5AWnEcsiLXOEyBXx1J_KGKLMSz64-5Z21g8iIV-LJLB8qA-EjubSlXJOcj_lwcuSSD8oY8gmA0bO--kd9WA6JcqwMf-2bw-ug-GpqGkT3CAbSWBlR6wXAi8w0wkiZk9oSmu7Da9A3uTm6db-WZi4-A4lH1hSz7"
-              alt="Profile avatar"
-            />
-          </div>
-        </div>
-      </header>
-
-      {/* Sidebar Navigation */}
-      <aside className="fixed inset-y-0 left-0 z-[45] hidden md:flex flex-col w-[280px] bg-surface-container-low/95 backdrop-blur-2xl border-r border-white/5 pt-20">
-        <div className="px-4 mb-6">
-          <div className="flex items-center gap-4 p-4 glass-panel rounded-xl text-left">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20" style={{ borderColor: 'rgba(180,197,255,0.2)' }}>
-              <span className="material-symbols-outlined text-primary text-xl" style={{ color: '#b4c5ff' }}>account_balance_wallet</span>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-on-surface">Investment Portfolio</p>
-              <p className="text-[10px] text-on-surface-variant font-mono uppercase tracking-wider" style={{ color: '#c3c6d7' }}>Premium Account</p>
-            </div>
-          </div>
-        </div>
-        
-        <nav className="flex-1 space-y-1 px-3 text-left overflow-y-auto">
-          <Link 
-            to="/" 
-            className="flex items-center gap-4 p-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all text-sm font-semibold"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">dashboard</span>
-            Dashboard
-          </Link>
-          <Link 
-            to="/assets" 
-            className="flex items-center gap-4 p-2.5 rounded-lg text-primary font-bold bg-primary/10 border-l-4 border-primary transition-all text-sm"
-            style={{ color: '#b4c5ff' }}
-          >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>account_balance_wallet</span>
-            Assets
-          </Link>
-          <Link 
-            to="/booking" 
-            className="flex items-center gap-4 p-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all text-sm font-semibold"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">calendar_month</span>
-            Reservations
-          </Link>
-          <Link 
-            to="/assistant" 
-            className="flex items-center gap-4 p-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all text-sm font-semibold"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">smart_toy</span>
-            Assistant
-          </Link>
-          <Link 
-            to="/organization/departments" 
-            className="flex items-center gap-4 p-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all text-sm font-semibold"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">corporate_fare</span>
-            Organization
-          </Link>
-          <Link 
-            to="/maintenance" 
-            className="flex items-center gap-4 p-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all text-sm font-semibold"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">engineering</span>
-            Maintenance
-          </Link>
-          <Link 
-            to="/sustainability" 
-            className="flex items-center gap-4 p-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all text-sm font-semibold"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">eco</span>
-            Sustainability
-          </Link>
-          <Link 
-            to="/audit" 
-            className="flex items-center gap-4 p-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all text-sm font-semibold"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">verified_user</span>
-            Audit &amp; Compliance
-          </Link>
-        </nav>
-
-        <div className="p-6 border-t border-white/5 text-left">
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center gap-4 p-3 text-on-surface-variant hover:bg-white/5 rounded-lg transition-all text-sm font-semibold text-left cursor-pointer"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">logout</span>
-            Sign Out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Canvas */}
-      <main className="md:pl-[280px] pt-16 min-h-screen bg-background relative flex-1">
-        
-        {/* Scrollable Container */}
-        <div className="relative z-10 p-6 max-w-7xl mx-auto flex flex-col gap-6 text-left">
-          
-          {/* Page Header Area */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/5 pb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-primary font-mono uppercase tracking-widest text-[10px]" style={{ color: '#b4c5ff' }}>
-                  Asset ID: {assetId}
-                </span>
-                <div className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-bold" style={{ color: '#b4c5ff', borderColor: 'rgba(180,197,255,0.2)' }}>
-                  OPERATIONAL
-                </div>
-              </div>
-              <h1 className="text-2xl font-bold text-on-surface">Precision Core Facility A1</h1>
-            </div>
-            
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        {/* Top Header */}
+        <header className="bg-white border-b border-slate-100 px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sticky top-0 z-40">
+          <div>
             <div className="flex items-center gap-2">
-              <button 
-                onClick={() => toast.success('Exporting telemetry ledger to local storage…')}
-                className="px-4 h-10 glass-panel rounded-lg text-xs font-semibold hover:bg-white/10 transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-sm">download</span> Export Report
-              </button>
-              <button 
-                onClick={() => toast.success('Opening system calibration console…')}
-                className="px-4 h-10 bg-primary text-on-primary rounded-lg text-xs font-bold shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
-                style={{ backgroundColor: '#b4c5ff', color: '#00174b' }}
-              >
-                <span className="material-symbols-outlined text-sm">settings</span> Manage Configuration
-              </button>
+              <span className="text-indigo-600 font-mono uppercase tracking-wider text-[10px] font-bold">
+                Asset ID: {assetId}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[9px] text-emerald-700 font-bold border border-emerald-100 uppercase">
+                Operational
+              </span>
             </div>
+            <h1 className="text-xl font-black text-slate-900 tracking-tight mt-1">Precision Core Facility A1</h1>
           </div>
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button 
+              onClick={() => toast.success('Exporting telemetry ledger to local storage…')}
+              className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            >
+              <span className="material-symbols-outlined text-sm">download</span>
+              Export Report
+            </button>
+            <button 
+              onClick={() => toast.success('Opening system calibration console…')}
+              className="px-4 py-2 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+            >
+              <span className="material-symbols-outlined text-sm">settings</span>
+              Manage Configuration
+            </button>
+          </div>
+        </header>
 
-          {/* Multi-Pane Layout */}
+        {/* Page Content */}
+        <div className="px-8 py-6 max-w-7xl w-full mx-auto space-y-6">
+          
+          {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pb-20">
             
-            {/* Left Pane: Visualization & Health */}
+            {/* Left Pane: Visual telemetry */}
             <div className="lg:col-span-5 flex flex-col gap-6">
               
-              {/* 3D Style Asset View Image */}
-              <div className="glass-panel rounded-xl overflow-hidden relative group h-[380px]">
-                <div className="absolute inset-0 bg-gradient-to-t from-surface to-transparent opacity-60 z-10" />
-                <div className="absolute top-4 right-4 z-20">
-                  <button 
-                    onClick={() => toast.success('Viewing high-res schematic view')}
-                    className="p-2 glass-panel rounded-lg hover:bg-white/10 transition-all cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-white text-base">fullscreen</span>
-                  </button>
-                </div>
+              {/* Asset Cover Card */}
+              <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm relative group h-[340px]">
+                <img 
+                  className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700" 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPtr8hGWy1JWe4acsawgn8tUn3z2AbvAwhRBFpmcvvqUfESEjg9IBBzamjAunV3kaV5p5BkGMIRGYDsxN-PjJLJ4tSZDzx38EAjqqqN1QIBlkfuMJMU9XyXS6HLNLNmS4-i_yIfOgWZ_zGFU3qqCqrCPHoPCJChwDby_q1Ja-itU67KbrZi9ti-VcNCWxTYTOLwJpsXj3V_YVAvpo2VA7KpYmyd-lfuHExX8jRjLGQlBdkt_y303i3"
+                  alt="Precision core server facility"
+                />
                 
-                <div className="w-full h-full relative">
-                  <img 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPtr8hGWy1JWe4acsawgn8tUn3z2AbvAwhRBFpmcvvqUfESEjg9IBBzamjAunV3kaV5p5BkGMIRGYDsxN-PjJLJ4tSZDzx38EAjqqqN1QIBlkfuMJMU9XyXS6HLNLNmS4-i_yIfOgWZ_zGFU3qqCqrCPHoPCJChwDby_q1Ja-itU67KbrZi9ti-VcNCWxTYTOLwJpsXj3V_YVAvpo2VA7KpYmyd-lfuHExX8jRjLGQlBdkt_y303i3"
-                    alt="Precision core server facility"
-                  />
-                  <div className="scanline absolute inset-0 pointer-events-none opacity-30" />
-                </div>
-
-                {/* Overlays */}
-                <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col gap-2">
+                {/* Visual telemetry overlay */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent p-5 text-left flex flex-col justify-end text-white">
+                  <span className="text-[9px] text-indigo-300 font-extrabold uppercase tracking-widest mb-2 font-mono">Real-time Telemetry</span>
                   <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-[10px] text-on-surface-variant font-mono mb-1" style={{ color: '#c3c6d7' }}>REAL-TIME TELEMETRY</p>
-                      <div className="flex gap-4">
-                        <div className="flex flex-col">
-                          <span className="text-lg font-bold text-white">32.4°C</span>
-                          <span className="text-[9px] text-on-surface-variant uppercase font-semibold" style={{ color: '#c3c6d7' }}>Thermal</span>
-                        </div>
-                        <div className="w-px h-8 bg-white/10" />
-                        <div className="flex flex-col">
-                          <span className="text-lg font-bold text-white">98.2%</span>
-                          <span className="text-[9px] text-on-surface-variant uppercase font-semibold" style={{ color: '#c3c6d7' }}>Efficiency</span>
-                        </div>
+                    <div className="flex gap-4">
+                      <div>
+                        <p className="text-xl font-black text-white leading-none">32.4°C</p>
+                        <p className="text-[9px] text-slate-300 font-bold uppercase tracking-wider mt-1">Thermal</p>
+                      </div>
+                      <div className="w-px h-8 bg-white/10" />
+                      <div>
+                        <p className="text-xl font-black text-white leading-none">98.2%</p>
+                        <p className="text-[9px] text-slate-300 font-bold uppercase tracking-wider mt-1">Efficiency</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-on-surface-variant font-mono mb-1" style={{ color: '#c3c6d7' }}>UPTIME</p>
-                      <span className="text-lg font-bold text-primary" style={{ color: '#b4c5ff' }}>12,482h</span>
+                      <p className="text-xl font-black text-indigo-300 leading-none">12,482h</p>
+                      <p className="text-[9px] text-slate-300 font-bold uppercase tracking-wider mt-1">Uptime</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Circular Health Gauges */}
-              <div className="grid grid-cols-2 gap-4">
-                
+              {/* Integrity & Value gauges */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Structural integrity */}
-                <div className="glass-panel p-4 rounded-xl">
+                <div className="bg-white border border-slate-100 p-4.5 rounded-2xl shadow-sm text-left">
                   <div className="flex justify-between items-start mb-3">
-                    <span className="text-[9px] font-semibold text-on-surface-variant tracking-wider" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>
-                      STRUCTURAL INTEGRITY
-                    </span>
-                    <span className="text-primary material-symbols-outlined text-sm" style={{ color: '#b4c5ff' }}>monitor_heart</span>
+                    <span className="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Structural Integrity</span>
+                    <span className="material-symbols-outlined text-emerald-500 text-sm">monitor_heart</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-12 h-12">
+                  <div className="flex items-center gap-3.5">
+                    <div className="relative w-12 h-12 flex-shrink-0">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <circle className="stroke-white/5" cx="18" cy="18" fill="none" r="16" strokeWidth="3" />
-                        <circle className="stroke-primary" cx="18" cy="18" fill="none" r="16" strokeDasharray="100" strokeDashoffset="5" strokeWidth="3" style={{ stroke: '#2563eb' }} />
+                        <circle className="stroke-slate-100" cx="18" cy="18" fill="none" r="16" strokeWidth="3" />
+                        <circle className="stroke-emerald-500" cx="18" cy="18" fill="none" r="16" strokeDasharray="100" strokeDashoffset="5" strokeWidth="3" />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-bold">95%</span>
+                        <span className="text-xs font-bold text-slate-800">95%</span>
                       </div>
                     </div>
-                    <div className="text-left">
-                      <p className="text-xs font-bold text-primary" style={{ color: '#b4c5ff' }}>OPTIMAL</p>
-                      <p className="text-[9px] text-on-surface-variant mt-0.5" style={{ color: '#c3c6d7' }}>Last checked 2h ago</p>
+                    <div>
+                      <p className="text-xs font-bold text-emerald-600">OPTIMAL</p>
+                      <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Last checked 2h ago</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Residual value */}
-                <div className="glass-panel p-4 rounded-xl">
+                <div className="bg-white border border-slate-100 p-4.5 rounded-2xl shadow-sm text-left">
                   <div className="flex justify-between items-start mb-3">
-                    <span className="text-[9px] font-semibold text-on-surface-variant tracking-wider" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>
-                      RESIDUAL VALUE
-                    </span>
-                    <span className="text-tertiary material-symbols-outlined text-sm" style={{ color: '#b9c7e0' }}>payments</span>
+                    <span className="text-[9px] font-bold text-slate-400 tracking-wider uppercase">Residual Value</span>
+                    <span className="material-symbols-outlined text-indigo-500 text-sm">payments</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-12 h-12">
+                  <div className="flex items-center gap-3.5">
+                    <div className="relative w-12 h-12 flex-shrink-0">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <circle className="stroke-white/5" cx="18" cy="18" fill="none" r="16" strokeWidth="3" />
-                        <circle className="stroke-tertiary" cx="18" cy="18" fill="none" r="16" stroke-dasharray="100" stroke-dashoffset="35" stroke-width="3" style={{ stroke: '#b9c7e0' }} />
+                        <circle className="stroke-slate-100" cx="18" cy="18" fill="none" r="16" strokeWidth="3" />
+                        <circle className="stroke-indigo-600" cx="18" cy="18" fill="none" r="16" strokeDasharray="100" strokeDashoffset="35" strokeWidth="3" />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-bold">65%</span>
+                        <span className="text-xs font-bold text-slate-800">65%</span>
                       </div>
                     </div>
-                    <div className="text-left">
-                      <p className="text-xs font-bold text-tertiary" style={{ color: '#b9c7e0' }}>$1.2M USD</p>
-                      <p className="text-[9px] text-on-surface-variant mt-0.5" style={{ color: '#c3c6d7' }}>Depreciation: Linear</p>
+                    <div>
+                      <p className="text-xs font-bold text-indigo-600">$1.2M USD</p>
+                      <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Depreciation: Linear</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Sub-system Status List */}
-              <div className="glass-panel p-4 rounded-xl flex flex-col gap-3">
-                <h3 className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>
-                  Sub-System Status
-                </h3>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between p-2 px-3 rounded-lg bg-white/2">
+              {/* Sub-system lists */}
+              <div className="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm text-left">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Sub-System Status</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/50">
                     <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" style={{ backgroundColor: '#2563eb', boxShadow: '0 0 6px #2563eb' }} />
-                      <span className="text-xs font-semibold">Power Distribution Unit</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
+                      <span className="text-xs font-bold text-slate-700">Power Distribution Unit</span>
                     </div>
-                    <span className="text-[9px] font-mono text-on-surface-variant font-bold uppercase" style={{ color: '#c3c6d7' }}>NOMINAL</span>
+                    <span className="text-[9px] font-bold text-emerald-600 uppercase">Nominal</span>
                   </div>
-
-                  <div className="flex items-center justify-between p-2 px-3 rounded-lg bg-white/2">
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/50">
                     <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" style={{ backgroundColor: '#2563eb', boxShadow: '0 0 6px #2563eb' }} />
-                      <span className="text-xs font-semibold">Environmental Controls</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
+                      <span className="text-xs font-bold text-slate-700">Environmental Controls</span>
                     </div>
-                    <span className="text-[9px] font-mono text-on-surface-variant font-bold uppercase" style={{ color: '#c3c6d7' }}>NOMINAL</span>
+                    <span className="text-[9px] font-bold text-emerald-600 uppercase">Nominal</span>
                   </div>
-
-                  <div className="flex items-center justify-between p-2 px-3 rounded-lg bg-white/2">
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100/50">
                     <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-tertiary" style={{ backgroundColor: '#b9c7e0', boxShadow: '0 0 6px #b9c7e0' }} />
-                      <span className="text-xs font-semibold">Auxiliary Data Bus</span>
+                      <span className="w-2 h-2 rounded-full bg-amber-500 shadow-sm" />
+                      <span className="text-xs font-bold text-slate-700">Auxiliary Data Bus</span>
                     </div>
-                    <span className="text-[9px] font-mono text-tertiary font-bold uppercase" style={{ color: '#b9c7e0' }}>MAINTENANCE REQ.</span>
+                    <span className="text-[9px] font-bold text-amber-600 uppercase">Service Req.</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Pane: Lifecycle Timeline */}
+            {/* Right Pane: Logs & timeline */}
             <div className="lg:col-span-7 flex flex-col gap-6">
               
-              {/* GitHub Style Heatmap Grid */}
-              <div className="glass-panel p-6 rounded-xl overflow-hidden">
+              {/* Heatmap Grid */}
+              <div className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm text-left">
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                   <div>
-                    <h2 className="text-base font-bold text-on-surface">Asset Activity Log</h2>
-                    <p className="text-xs text-on-surface-variant mt-0.5" style={{ color: '#c3c6d7' }}>Visualization of operational health over the last 12 months.</p>
+                    <h2 className="text-sm font-bold text-slate-900">Asset Activity Log</h2>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Visualization of telemetry scans over 12 months</p>
                   </div>
-                  
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] font-semibold text-on-surface-variant uppercase tracking-wider" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>Less</span>
-                    <div className="w-3 h-3 bg-white/5 rounded-sm" />
-                    <div className="w-3 h-3 bg-primary/20 rounded-sm" style={{ backgroundColor: 'rgba(180,197,255,0.2)' }} />
-                    <div className="w-3 h-3 bg-primary/40 rounded-sm" style={{ backgroundColor: 'rgba(180,197,255,0.4)' }} />
-                    <div className="w-3 h-3 bg-primary/70 rounded-sm" style={{ backgroundColor: 'rgba(180,197,255,0.7)' }} />
-                    <div className="w-3 h-3 bg-primary rounded-sm" style={{ backgroundColor: '#b4c5ff' }} />
-                    <span className="text-[9px] font-semibold text-on-surface-variant uppercase tracking-wider" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>More</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Less</span>
+                    <div className="w-2.5 h-2.5 bg-slate-100 rounded-xs" />
+                    <div className="w-2.5 h-2.5 bg-indigo-100 rounded-xs" />
+                    <div className="w-2.5 h-2.5 bg-indigo-300 rounded-xs" />
+                    <div className="w-2.5 h-2.5 bg-indigo-500 rounded-xs" />
+                    <div className="w-2.5 h-2.5 bg-indigo-700 rounded-xs" />
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">More</span>
                   </div>
                 </div>
 
-                {/* Heatmap render */}
-                <div className="overflow-x-auto custom-scrollbar pb-3">
+                <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200">
                   <div className="grid grid-flow-col grid-rows-7 gap-1 min-w-max">
                     {activityTiles.map((tile) => (
                       <div 
                         key={tile.id} 
-                        className={`w-[11px] h-[11px] rounded-sm github-style-tile ${tile.className}`} 
+                        className={`w-2.5 h-2.5 rounded-xs transition-all duration-200 hover:scale-120 ${tile.className}`} 
                       />
                     ))}
                   </div>
                 </div>
                 
-                <div className="flex justify-between mt-2 px-1">
-                  {['JAN', 'MAR', 'MAY', 'JUL', 'SEP', 'NOV'].map(m => (
-                    <span key={m} className="text-[9px] font-mono font-bold text-on-surface-variant" style={{ color: '#8d90a0' }}>{m}</span>
-                  ))}
+                <div className="flex justify-between mt-2 text-[9px] font-mono font-bold text-slate-400">
+                  {['JAN', 'MAR', 'MAY', 'JUL', 'SEP', 'NOV'].map(m => <span key={m}>{m}</span>)}
                 </div>
               </div>
 
-              {/* Event Lifecycle logs Timeline */}
-              <div className="glass-panel p-6 rounded-xl flex-1 flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-base font-bold text-on-surface">Lifecycle Events</h3>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => toast.success('Filtering events timeline')}
-                      className="p-1.5 rounded-lg border border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-sm" style={{ color: '#c3c6d7' }}>filter_list</span>
-                    </button>
-                    <button 
-                      onClick={() => toast.success('Searching logs database')}
-                      className="p-1.5 rounded-lg border border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-sm" style={{ color: '#c3c6d7' }}>search</span>
-                    </button>
-                  </div>
+              {/* Event Timeline logs */}
+              <div className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm flex-1 flex flex-col justify-between text-left">
+                <div className="mb-6">
+                  <h3 className="text-sm font-bold text-slate-900">Lifecycle Events</h3>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Historical telemetry anomalies and service intervals</p>
                 </div>
 
-                <div className="flex-1 space-y-6 relative border-l border-white/5 pl-6 ml-3 text-left">
+                <div className="flex-1 space-y-6 relative border-l border-slate-100 pl-6 ml-3">
                   
                   {/* Event 1 */}
                   <div className="relative">
-                    <div 
-                      className="absolute -left-[35px] top-0 w-6 h-6 rounded-full glass-panel flex items-center justify-center z-10 border border-primary/45 bg-[#11131b]"
-                      style={{ borderColor: 'rgba(180,197,255,0.45)' }}
-                    >
-                      <span className="material-symbols-outlined text-[12px] text-primary" style={{ color: '#b4c5ff' }}>build</span>
+                    <div className="absolute -left-[35px] top-0 w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center z-10 shadow-sm">
+                      <span className="material-symbols-outlined text-[12px] text-slate-600 font-bold">build</span>
                     </div>
                     <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
                       <div>
-                        <h4 className="font-bold text-on-surface text-sm">Scheduled Maintenance: Q3 Calibration</h4>
-                        <p className="text-[10px] font-mono font-bold text-on-surface-variant mt-0.5" style={{ color: '#c3c6d7' }}>
-                          Oct 12, 2023 • Service Order #7721
-                        </p>
+                        <h4 className="font-bold text-slate-800 text-xs">Scheduled Maintenance: Q3 Calibration</h4>
+                        <p className="text-[10px] text-slate-400 font-semibold font-mono mt-0.5">Oct 12, 2023 • Service Order #7721</p>
                       </div>
-                      <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-bold uppercase border border-primary/20" style={{ color: '#b4c5ff', borderColor: 'rgba(180,197,255,0.2)' }}>
-                        COMPLETED
+                      <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-100 uppercase">
+                        Completed
                       </span>
                     </div>
-                    <div className="glass-panel p-4 rounded-lg border-l-4 border-primary" style={{ borderLeftColor: '#2563eb' }}>
-                      <p className="text-xs text-on-surface-variant leading-relaxed" style={{ color: '#c3c6d7' }}>
+                    <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl border-l-4 border-l-emerald-500">
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
                         Precision realignment of optical sensors and thermal buffer flushing. No significant wear detected in core components.
                       </p>
-                      <div className="mt-4 flex gap-4 items-center text-[9px] font-mono font-bold text-on-surface-variant" style={{ color: '#8d90a0' }}>
-                        <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-xs">person</span> J. Rodriguez
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-xs">timer</span> 4.5h Duration
-                        </div>
+                      <div className="mt-3.5 flex gap-4 text-[9px] font-mono font-bold text-slate-400">
+                        <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-xs">person</span> J. Rodriguez</span>
+                        <span className="flex items-center gap-0.5"><span className="material-symbols-outlined text-xs">timer</span> 4.5h Duration</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Event 2 */}
                   <div className="relative">
-                    <div className="absolute -left-[35px] top-0 w-6 h-6 rounded-full glass-panel flex items-center justify-center z-10 border border-white/20 bg-[#11131b]">
-                      <span className="material-symbols-outlined text-[12px] text-on-surface">swap_horiz</span>
+                    <div className="absolute -left-[35px] top-0 w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center z-10 shadow-sm">
+                      <span className="material-symbols-outlined text-[12px] text-slate-600">swap_horiz</span>
                     </div>
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
                       <div>
-                        <h4 className="font-bold text-on-surface text-sm">Asset Allocation Update</h4>
-                        <p className="text-[10px] font-mono font-bold text-on-surface-variant mt-0.5" style={{ color: '#c3c6d7' }}>
-                          Aug 05, 2023 • Request ID: REQ-091
-                        </p>
+                        <h4 className="font-bold text-slate-800 text-xs">Asset Allocation Update</h4>
+                        <p className="text-[10px] text-slate-400 font-semibold font-mono mt-0.5">Aug 05, 2023 • Request ID: REQ-091</p>
                       </div>
-                      <span className="px-2 py-0.5 rounded bg-white/5 text-on-surface-variant text-[9px] font-bold uppercase border border-white/10" style={{ color: '#c3c6d7' }}>
-                        SYSTEM
+                      <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-500 text-[9px] font-bold uppercase">
+                        System
                       </span>
                     </div>
-                    <div className="glass-panel p-4 rounded-lg">
-                      <p className="text-xs text-on-surface-variant leading-relaxed" style={{ color: '#c3c6d7' }}>
-                        Transferred from <span className="text-primary font-bold" style={{ color: '#b4c5ff' }}>Backup-Cluster B</span> to <span className="text-primary font-bold" style={{ color: '#b4c5ff' }}>Production Alpha</span> to meet surging computational demands.
+                    <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl">
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                        Transferred from <span className="text-indigo-600 font-bold">Backup-Cluster B</span> to <span className="text-indigo-600 font-bold">Production Alpha</span> to meet surging computational demands.
                       </p>
                     </div>
                   </div>
 
                   {/* Event 3 */}
                   <div className="relative">
-                    <div className="absolute -left-[35px] top-0 w-6 h-6 rounded-full glass-panel flex items-center justify-center z-10 border border-error/50 bg-[#11131b]" style={{ borderColor: 'rgba(255,180,171,0.5)' }}>
-                      <span className="material-symbols-outlined text-[12px] text-error" style={{ color: '#ffb4ab' }}>warning</span>
+                    <div className="absolute -left-[35px] top-0 w-6 h-6 rounded-full border border-red-200 bg-white flex items-center justify-center z-10 shadow-sm">
+                      <span className="material-symbols-outlined text-[12px] text-red-500 font-bold">warning</span>
                     </div>
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
                       <div>
-                        <h4 className="font-bold text-on-surface text-sm">Critical Temperature Spike</h4>
-                        <p className="text-[10px] font-mono font-bold text-on-surface-variant mt-0.5" style={{ color: '#c3c6d7' }}>
-                          June 21, 2023 • Event ID: ERR-104
-                        </p>
+                        <h4 className="font-bold text-slate-800 text-xs">Critical Temperature Spike</h4>
+                        <p className="text-[10px] text-slate-400 font-semibold font-mono mt-0.5">June 21, 2023 • Event ID: ERR-104</p>
                       </div>
-                      <span className="px-2 py-0.5 rounded bg-error-container/30 text-error text-[9px] font-bold uppercase border border-error-container/40" style={{ color: '#ffb4ab' }}>
-                        CRITICAL
+                      <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 text-[9px] font-bold border border-red-100 uppercase">
+                        Critical
                       </span>
                     </div>
-                    <div className="glass-panel p-4 rounded-lg border-l-4 border-error" style={{ borderLeftColor: '#ffb4ab' }}>
-                      <p className="text-xs text-on-surface-variant leading-relaxed" style={{ color: '#c3c6d7' }}>
+                    <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl border-l-4 border-l-red-500">
+                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
                         Core temperature reached 55°C. Automated cooling override engaged. System throttled to 50% capacity for 12 minutes.
                       </p>
                     </div>
@@ -529,83 +309,40 @@ export default function AssetDetail() {
                 </div>
               </div>
             </div>
+
           </div>
-        </div>
 
-        {/* AI Assistant Floating Input Container */}
-        <div className="fixed bottom-6 right-6 z-50 w-80 md:w-96">
-          <form 
-            onSubmit={handleAiSend}
-            onFocus={() => setIsAiGlow(true)}
-            onBlur={() => setIsAiGlow(false)}
-            className="glass-panel p-2 rounded-2xl flex items-center gap-3 shadow-2xl border-white/10 bg-[#1e2029]"
-          >
-            <div 
-              className={`w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 relative overflow-hidden transition-all duration-300 ${isAiGlow ? 'scale-110' : ''}`}
-              style={{ 
-                backgroundColor: '#b4c5ff', 
-                color: '#00174b', 
-                boxShadow: isAiGlow ? '0 0 20px rgba(180, 197, 255, 0.4)' : 'none' 
-              }}
-            >
-              <span className="material-symbols-outlined text-lg">smart_toy</span>
-              <div className="absolute inset-0 bg-white/20 animate-pulse" />
-            </div>
-            
-            <input 
-              className="bg-transparent border-none outline-none focus:ring-0 text-xs text-on-surface placeholder:text-on-surface-variant flex-1 px-0" 
-              placeholder="Ask AI about this asset's health..." 
-              type="text"
-              value={aiText}
-              onChange={e => setAiText(e.target.value)}
-            />
-            
-            <button 
-              type="submit"
-              className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-colors cursor-pointer"
-              style={{ color: '#b4c5ff' }}
-            >
-              <span className="material-symbols-outlined text-base">send</span>
-            </button>
-          </form>
         </div>
-
-        {/* Mobile Navigation overlay */}
-        <nav 
-          className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2"
-          style={{ backgroundColor: 'rgba(17,19,27,0.8)', borderTop: '1px solid rgba(255,255,255,0.1)' }}
-        >
-          <Link 
-            to="/"
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-colors text-on-surface-variant"
-          >
-            <span className="material-symbols-outlined text-xl">dashboard</span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: "'Geist', monospace" }}>Dashboard</span>
-          </Link>
-          <Link 
-            to="/assets"
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-colors text-primary bg-primary/10"
-            style={{ color: '#b4c5ff' }}
-          >
-            <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>account_balance_wallet</span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: "'Geist', monospace" }}>Assets</span>
-          </Link>
-          <button 
-            onClick={() => { toast.success('QR tag scan initialized'); }}
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-colors text-on-surface-variant cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-xl">qr_code_scanner</span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: "'Geist', monospace" }}>Scan</span>
-          </button>
-          <Link 
-            to="/assistant"
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-colors text-on-surface-variant"
-          >
-            <span className="material-symbols-outlined text-xl">smart_toy</span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: "'Geist', monospace" }}>Assistant</span>
-          </Link>
-        </nav>
       </main>
+
+      {/* Floating AI assistant prompt */}
+      <div className="fixed bottom-6 right-6 z-50 w-80 md:w-96">
+        <form 
+          onSubmit={handleAiSend}
+          onFocus={() => setIsAiGlow(true)}
+          onBlur={() => setIsAiGlow(false)}
+          className="bg-white border border-slate-200 p-2 rounded-2xl flex items-center gap-3 shadow-2xl transition-all duration-300"
+        >
+          <div 
+            className={`w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center flex-shrink-0 transition-transform ${isAiGlow ? 'scale-105' : ''}`}
+          >
+            <span className="material-symbols-outlined text-base">smart_toy</span>
+          </div>
+          <input 
+            type="text"
+            placeholder="Ask Lumina AI about this asset..."
+            value={aiText}
+            onChange={e => setAiText(e.target.value)}
+            className="bg-transparent border-none outline-none focus:ring-0 text-xs text-slate-800 placeholder-slate-400 flex-1 px-1 py-1"
+          />
+          <button 
+            type="submit"
+            className="p-1.5 hover:bg-slate-50 text-slate-600 rounded-xl cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-base">send</span>
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
