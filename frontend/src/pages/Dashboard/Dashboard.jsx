@@ -1,559 +1,274 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import Sidebar from '../../components/Sidebar';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [overdueVisible, setOverdueVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [assistantText, setAssistantText] = useState('');
-  const [greeting, setGreeting] = useState('Welcome back, Director');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Time-based greeting
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good morning, Director');
-    else if (hour < 18) setGreeting('Good afternoon, Director');
-    else setGreeting('Good evening, Director');
-  }, []);
-
-  // Check login authentication
-  useEffect(() => {
-    const user = localStorage.getItem('af_logged_in_user');
-    if (!user) {
-      navigate('/login');
-    }
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('af_logged_in_user');
-    toast.success('Successfully logged out.');
-    navigate('/login');
-  };
-
-  const handleExecuteActions = () => {
-    toast.success('AI suggestions executed! Reallocating crypto assets to mitigate risk…');
-  };
-
-  const handleAssistantSend = (e) => {
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (!assistantText.trim()) return;
-    
-    const query = assistantText;
-    setAssistantText('');
-    toast.loading('Analyzing risk profiles…', { id: 'ai' });
-
-    setTimeout(() => {
-      toast.success(`AI Response: Portfolio risk analyzed. Benchmark is optimized!`, { id: 'ai', duration: 4000 });
-    }, 1500);
+    if (searchQuery.trim()) {
+      navigate(`/assets?q=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
-  // Mock audits list
-  const initialAudits = [
-    { name: 'Data Center Alpha', location: 'Zurich, CH', date: 'Oct 24, 2023', status: 'Critical' },
-    { name: 'Logistics Fleet B', location: 'Singapore, SG', date: 'Oct 29, 2023', status: 'Scheduled' },
-    { name: 'Cloud Reserve Cluster', location: 'N. Virginia, US', date: 'Nov 02, 2023', status: 'Scheduled' },
-    { name: 'Rare Earth Inventory', location: 'Perth, AU', date: 'Nov 15, 2023', status: 'Imminent' }
+  const activities = [
+    { id: 1, title: 'Laptop AF-0114 allocated to Priya Shah', desc: 'Dept: IT Development | Serial: MAC-49201-B', time: '14 mins ago', tag1: 'Asset Transfer', tag2: 'Hardware', bg: 'bg-[#b3eee0]/40 text-[#00201b]' },
+    { id: 2, title: 'Room B2 booking confirmed', desc: 'Time: 2:00 PM to 3:00 PM | Purpose: Quarterly Review', time: '42 mins ago', tag1: 'Space Mgmt', tag2: 'Reserved', bg: 'bg-slate-100 text-slate-700' },
+    { id: 3, title: 'Projector AF-0062 maintenance resolved', desc: 'Status: Field Test Passed | Action: Bulb Replacement', time: '2 hours ago', tag1: 'Maintenance', tag2: 'Completed', bg: 'bg-emerald-50 text-emerald-800' }
   ];
 
-  const filteredAudits = initialAudits.filter(item => 
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <div 
-      className="bg-background text-on-surface min-h-screen flex overflow-hidden w-full"
-      style={{ backgroundColor: '#11131b', color: '#e1e2ed', fontFamily: "'Inter', sans-serif" }}
-    >
-      <style>{`
-        .glass-panel {
-          backdrop-filter: blur(12px);
-          background: rgba(30, 41, 59, 0.5);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .glass-panel-heavy {
-          backdrop-filter: blur(20px);
-          background: rgba(30, 41, 59, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .card-top-highlight {
-          border-top: 1px solid rgba(255, 255, 255, 0.12);
-        }
-        .active-glow {
-          box-shadow: 0 0 20px rgba(180, 197, 255, 0.1);
-        }
-      `}</style>
+    <div className="flex min-h-screen bg-[#F9F9F7] font-sans antialiased text-[#1a1c1b]">
+      <Sidebar />
 
-      {/* Navigation Drawer (SideNav) */}
-      <aside 
-        className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out md:static flex flex-col h-full w-[280px] bg-surface-container-low/95 backdrop-blur-2xl border-r border-white/5 z-[60] flex-shrink-0`}
-        style={{ minHeight: '100vh' }}
-      >
-        <div className="px-6 py-10 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-primary tracking-tight" style={{ color: '#b4c5ff' }}>AssetFlow</h1>
-          <button 
-            className="md:hidden material-symbols-outlined text-on-surface"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            close
-          </button>
-        </div>
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
-        <nav className="flex-1 px-3 space-y-1 overflow-y-auto text-left">
-          <Link 
-            to="/"
-            className="w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-primary font-bold bg-primary/5 border-l-4 border-primary transition-all duration-200"
-            style={{ color: '#b4c5ff' }}
-          >
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="text-sm">Dashboard</span>
-          </Link>
-          
-          <Link 
-            to="/assets"
-            className="w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all duration-200"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">inventory_2</span>
-            <span className="text-sm">Assets</span>
-          </Link>
-
-          <Link 
-            to="/booking"
-            className="w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all duration-200"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">calendar_month</span>
-            <span className="text-sm">Reservations</span>
-          </Link>
-
-          <Link 
-            to="/assistant"
-            className="w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all duration-200"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">smart_toy</span>
-            <span className="text-sm">Assistant</span>
-          </Link>
-
-          <Link 
-            to="/organization/departments"
-            className="w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all duration-200"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">corporate_fare</span>
-            <span className="text-sm">Organization</span>
-          </Link>
-
-          <Link 
-            to="/maintenance"
-            className="w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all duration-200"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">engineering</span>
-            <span className="text-sm">Maintenance</span>
-          </Link>
-
-          <Link 
-            to="/sustainability"
-            className="w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all duration-200"
-            style={{ color: '#c3c6d7' }}
-          >
-            <span className="material-symbols-outlined">eco</span>
-            <span className="text-sm">Sustainability</span>
-          </Link>
-        </nav>
-
-        {/* Profile Card Footer */}
-        <div className="p-6 mt-auto glass-panel-heavy m-3 rounded-xl border-white/10">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
-              <span className="material-symbols-outlined text-primary" style={{ color: '#b4c5ff' }}>person</span>
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-sm font-bold text-on-surface">Director Portfolio</span>
-              <span className="text-[10px] text-primary/80 uppercase tracking-widest font-medium" style={{ fontFamily: "'Geist', monospace", color: '#b4c5ff' }}>
-                Premium Account
-              </span>
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] font-medium px-2.5 py-0.5 bg-primary/10 text-primary rounded-full border border-primary/20" style={{ color: '#b4c5ff', borderColor: 'rgba(180,197,255,0.2)' }}>
-              Active
-            </span>
-            <button 
-              onClick={handleLogout}
-              className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
-              title="Logout Account"
-            >
-              logout
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative h-screen overflow-y-auto w-full">
-        {/* TopAppBar */}
-        <header className="fixed top-0 right-0 left-0 md:left-[280px] h-16 bg-surface/50 backdrop-blur-xl border-b border-white/5 flex justify-between items-center px-6 z-50">
-          <div className="flex items-center gap-4">
-            <button 
-              className="md:hidden material-symbols-outlined text-on-surface"
-              onClick={() => setIsMobileMenuOpen(true)}
-            >
-              menu
-            </button>
-            <span className="text-lg font-bold text-primary hidden md:block" style={{ color: '#b4c5ff' }}>
-              Portfolio Command Center
-            </span>
-            <span className="text-lg font-bold text-primary md:hidden" style={{ color: '#b4c5ff' }}>
-              AssetFlow
-            </span>
-          </div>
-
-          <div className="flex items-center gap-6">
-            {/* Global search */}
-            <div className="hidden sm:flex items-center glass-panel px-4 py-1.5 rounded-full border border-white/5">
-              <span className="material-symbols-outlined text-on-surface-variant text-lg" style={{ color: '#c3c6d7' }}>search</span>
+        {/* TopNavBar */}
+        <header className="sticky top-0 z-40 flex justify-between items-center w-full px-8 py-3 bg-[#F9F9F7] border-b border-[#bfc9c5]/40 shadow-xs">
+          <div className="flex items-center gap-8 flex-1">
+            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-md">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#404946] opacity-60 text-base">search</span>
               <input 
-                className="bg-transparent border-none outline-none focus:ring-0 text-xs text-on-surface w-48 px-2" 
-                placeholder="Search upcoming audits..." 
                 type="text"
+                placeholder="Search assets, rooms, or requests..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-[#f4f4f1] border-none rounded-full py-2.5 pl-12 pr-4 text-xs focus:ring-2 focus:ring-[#00352d] outline-none transition-all placeholder:text-[#404946]/50 text-[#1a1c1b]" 
               />
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => toast.success('No new warnings logged in command center.')}
-                className="material-symbols-outlined text-on-surface-variant hover:bg-white/5 p-2 rounded-full transition-all active:scale-95"
-              >
-                notifications
-              </button>
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-primary/50" style={{ borderColor: '#b4c5ff' }}>
+            </form>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/notifications')}
+              className="material-symbols-outlined p-2 rounded-full text-[#404946] hover:bg-[#f4f4f1] transition-colors text-lg relative"
+            >
+              notifications
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-red-500" />
+            </button>
+            <button 
+              onClick={() => toast.success('Settings console initialized.')}
+              className="material-symbols-outlined p-2 rounded-full text-[#404946] hover:bg-[#f4f4f1] transition-colors text-lg"
+            >
+              settings
+            </button>
+            <div className="h-6 w-px bg-[#bfc9c5]/60 mx-1" />
+            <div className="flex items-center gap-2 cursor-pointer hover:bg-[#f4f4f1] p-1 rounded-full transition-colors">
+              <div className="w-9 h-9 rounded-full border-2 border-[#b3eee0] overflow-hidden">
                 <img 
-                  alt="Profile Avatar" 
                   className="w-full h-full object-cover" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2ZgfvOJWT141SJhyUKxULwU_F5aGixqgnqu8COtGx5-OwodIbwZkTC2TUJeqQjfksV-4UP0MkEs70RZQswbiG1en7JRjL226qXLsy51yZMUsO0AXW9kX19wr37jeCQqRkjp1fWiSK0smmaiAS7mFBYn887sndPjhzavYTP_pLTmoHUhnZLWG4uEfbGGWDf838kDTVgx5TysXPrsMx1MdJ_KvjUxWBUy0n_x-TJAsZh0TGQ-KkD8w0"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx-aYNuMHnK-OfIRzsZuFBSJRg5e9N244KJYHnPEhhFoLYjidnDaZ87qek-mhoxf_IGua8aOwmmOQFDXxnKo1cxJOiONNTrCrQMTfdoz8kdcHzWBP2_KQ21XDeuMpxl-5NdYrMYoLJY6yppeFYjiIMl62Wlq1clNnPN57H82EN5aqIZ49xjqVz1NfSAggWthedpN-rcjblR-zB0AF9znhFp_PPePCI9NoXNQ5nZGIGT93odfCpPRUA"
+                  alt="Profile Avatar"
                 />
               </div>
             </div>
           </div>
         </header>
 
-        {/* Content body */}
-        <div className="pt-24 px-6 pb-24 space-y-6 max-w-[1440px] mx-auto w-full text-left">
+        {/* Main Canvas Area */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-6 text-left pb-20">
           
-          {/* Hero Row */}
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Welcome banner */}
-            <div className="lg:col-span-2 glass-panel p-6 rounded-2xl relative overflow-hidden card-top-highlight active-glow flex flex-col justify-between min-h-[220px]">
-              <div className="relative z-10">
-                <span className="text-xs font-semibold text-primary/80 uppercase tracking-widest block" style={{ fontFamily: "'Geist', monospace", color: '#b4c5ff' }}>
-                  System Overview
-                </span>
-                <h2 className="text-3xl font-bold mt-2 mb-3 text-on-surface">{greeting}</h2>
-                <p className="text-sm text-on-surface-variant max-w-xl leading-relaxed" style={{ color: '#c3c6d7' }}>
-                  Your portfolio is currently performing <span class="text-primary font-bold" style={{ color: '#b4c5ff' }}>+12.4%</span> above the quarterly benchmark. AI Assistant has identified 3 risk-mitigation opportunities in your crypto assets.
-                </p>
-              </div>
-              <div className="flex gap-4 mt-6 relative z-10">
-                <button 
-                  onClick={handleExecuteActions}
-                  className="bg-primary text-on-primary-fixed font-bold text-sm px-5 py-3 rounded-xl hover:opacity-90 transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
-                  style={{ backgroundColor: '#b4c5ff', color: '#00174b' }}
-                >
-                  <span className="material-symbols-outlined text-lg">bolt</span>
-                  Execute Actions
-                </button>
-                <button 
-                  onClick={() => toast.success('Detailed quarterly risk breakdown loaded.')}
-                  className="bg-white/5 border border-white/10 text-on-surface font-bold text-sm px-5 py-3 rounded-xl hover:bg-white/10 transition-all active:scale-95 cursor-pointer"
-                >
-                  View Details
-                </button>
-              </div>
-            </div>
-
-            {/* Network Latency Widget */}
-            <div className="glass-panel p-6 rounded-2xl card-top-highlight flex flex-col justify-between">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>
-                  Network Latency
-                </span>
-                <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" style={{ backgroundColor: '#b4c5ff' }} />
-              </div>
-              <div className="my-auto py-4">
-                <div className="text-5xl font-bold text-primary leading-none" style={{ fontFamily: "'Geist', monospace", color: '#b4c5ff' }}>
-                  14.2ms
-                </div>
-                <div className="text-xs text-on-surface-variant mt-2 font-medium" style={{ color: '#c3c6d7' }}>
-                  Nodes synchronizing across 8 regions
-                </div>
-              </div>
-              <div className="pt-4 border-t border-white/5">
-                <div className="flex justify-between text-xs mb-1.5 font-medium">
-                  <span className="text-on-surface-variant" style={{ color: '#c3c6d7' }}>Uptime</span>
-                  <span className="text-on-surface">99.998%</span>
-                </div>
-                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary w-[99.9%]" style={{ backgroundColor: '#b4c5ff', boxShadow: '0 0 8px #b4c5ff' }} />
-                </div>
-              </div>
-            </div>
+          {/* Welcome Header */}
+          <section>
+            <h2 className="text-2xl font-black text-[#1a1c1b] tracking-tight">Today's Overview</h2>
+            <p className="text-xs text-[#404946]/70 font-semibold mt-1">Real-time status of your enterprise inventory.</p>
           </section>
 
-          {/* Bento grid metric cards */}
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Bento Grid: 3 KPI Cards */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            {/* Metric 1 */}
-            <div className="glass-panel p-5 rounded-2xl card-top-highlight hover:bg-white/[0.07] transition-all">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-primary text-lg" style={{ color: '#b4c5ff' }}>account_balance</span>
-                <span className="text-xs font-semibold text-on-surface-variant" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>
-                  Available Liquid
-                </span>
-              </div>
-              <div className="text-2xl font-bold text-on-surface">$2,482,900</div>
-              <div className="mt-2 flex items-center text-primary gap-1" style={{ color: '#b4c5ff' }}>
-                <span className="material-symbols-outlined text-sm">arrow_drop_up</span>
-                <span className="text-xs font-bold font-mono">+2.5%</span>
-              </div>
-            </div>
-
-            {/* Metric 2 */}
-            <div className="glass-panel p-5 rounded-2xl card-top-highlight hover:bg-white/[0.07] transition-all">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-secondary text-lg" style={{ color: '#bec6e0' }}>lock</span>
-                <span className="text-xs font-semibold text-on-surface-variant" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>
-                  Allocated Assets
-                </span>
-              </div>
-              <div className="text-2xl font-bold text-on-surface">$12,840,000</div>
-              <div className="mt-2 flex items-center text-primary gap-1" style={{ color: '#b4c5ff' }}>
-                <span className="material-symbols-outlined text-sm">arrow_drop_up</span>
-                <span className="text-xs font-bold font-mono">+0.8%</span>
-              </div>
-            </div>
-
-            {/* Metric 3 */}
-            <div className="glass-panel p-5 rounded-2xl card-top-highlight hover:bg-white/[0.07] transition-all">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-error text-lg" style={{ color: '#ffb4ab' }}>qr_code_2</span>
-                <span className="text-xs font-semibold text-on-surface-variant" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>
-                  Pending Scans
-                </span>
-              </div>
-              <div className="text-2xl font-bold text-on-surface">18 Items</div>
-              <div className="mt-2 flex items-center text-error gap-1" style={{ color: '#ffb4ab' }}>
-                <span className="material-symbols-outlined text-sm">priority_high</span>
-                <span className="text-xs font-bold font-mono">Action required</span>
-              </div>
-            </div>
-
-            {/* Metric 4 */}
-            <div className="glass-panel p-5 rounded-2xl card-top-highlight hover:bg-white/[0.07] transition-all">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-primary text-lg" style={{ color: '#b4c5ff' }}>smart_toy</span>
-                <span className="text-xs font-semibold text-on-surface-variant" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>
-                  Assistant Pulse
-                </span>
-              </div>
-              <div className="text-2xl font-bold text-on-surface">98.2% Accuracy</div>
-              <div className="mt-3 flex items-center gap-1">
-                <div className="flex gap-1">
-                  <div className="w-1.5 h-3.5 bg-primary rounded-full animate-pulse" style={{ backgroundColor: '#b4c5ff' }} />
-                  <div className="w-1.5 h-3.5 bg-primary/40 rounded-full animate-pulse [animation-delay:0.2s]" style={{ backgroundColor: 'rgba(180,197,255,0.4)' }} />
-                  <div className="w-1.5 h-3.5 bg-primary rounded-full animate-pulse [animation-delay:0.4s]" style={{ backgroundColor: '#b4c5ff' }} />
+            {/* Card 1: Available */}
+            <div className="bg-white border border-[#bfc9c5]/50 p-6 rounded-2xl shadow-xs hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 bg-[#0d4d43] rounded-xl flex-shrink-0">
+                  <span className="material-symbols-outlined text-[#83bdb0] text-lg">inventory</span>
                 </div>
+                <span className="text-[9px] font-extrabold text-[#00201b] bg-[#b3eee0] px-2 py-0.5 rounded-full border border-[#00201b]/10 uppercase">
+                  +12% vs LY
+                </span>
+              </div>
+              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">128</div>
+              <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Available Assets</div>
+              
+              {/* Vertical columns sparkline */}
+              <div className="mt-5 h-10 w-full flex items-end gap-1 px-1">
+                <div className="w-full bg-[#0d4d43] h-[40%] rounded-sm opacity-20" />
+                <div className="w-full bg-[#0d4d43] h-[60%] rounded-sm opacity-35" />
+                <div className="w-full bg-[#0d4d43] h-[50%] rounded-sm opacity-45" />
+                <div className="w-full bg-[#0d4d43] h-[75%] rounded-sm opacity-60" />
+                <div className="w-full bg-[#0d4d43] h-full rounded-sm" />
               </div>
             </div>
+
+            {/* Card 2: Allocated */}
+            <div className="bg-white border border-[#bfc9c5]/50 p-6 rounded-2xl shadow-xs hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 bg-[#dbe1e0] rounded-xl flex-shrink-0">
+                  <span className="material-symbols-outlined text-[#5d6463] text-lg">person_pin_circle</span>
+                </div>
+                <span className="text-[9px] font-extrabold text-[#171d1c] bg-[#dee4e3] px-2 py-0.5 rounded-full border border-[#171d1c]/10 uppercase">
+                  Stable
+                </span>
+              </div>
+              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">76</div>
+              <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Allocated Assets</div>
+              
+              {/* Vertical columns sparkline */}
+              <div className="mt-5 h-10 w-full flex items-end gap-1 px-1">
+                <div className="w-full bg-[#59605f] h-[30%] rounded-sm opacity-20" />
+                <div className="w-full bg-[#59605f] h-[55%] rounded-sm opacity-35" />
+                <div className="w-full bg-[#59605f] h-[45%] rounded-sm opacity-45" />
+                <div className="w-full bg-[#59605f] h-[65%] rounded-sm opacity-60" />
+                <div className="w-full bg-[#59605f] h-[85%] rounded-sm" />
+              </div>
+            </div>
+
+            {/* Card 3: Rooms */}
+            <div className="bg-white border border-[#bfc9c5]/50 p-6 rounded-2xl shadow-xs hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 bg-[#2b2f2e]/10 rounded-xl flex-shrink-0">
+                  <span className="material-symbols-outlined text-[#2b2f2e] text-lg">meeting_room</span>
+                </div>
+                <span className="text-[9px] font-extrabold text-[#93000a] bg-[#ffdad6] px-2 py-0.5 rounded-full border border-[#93000a]/10 uppercase">
+                  -2 from AM
+                </span>
+              </div>
+              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">4</div>
+              <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Available Rooms</div>
+              
+              {/* Vertical columns sparkline */}
+              <div className="mt-5 h-10 w-full flex items-end gap-1 px-1">
+                <div className="w-full bg-[#2b2f2e] h-[85%] rounded-sm opacity-20" />
+                <div className="w-full bg-[#2b2f2e] h-[65%] rounded-sm opacity-35" />
+                <div className="w-full bg-[#2b2f2e] h-[50%] rounded-sm opacity-45" />
+                <div className="w-full bg-[#2b2f2e] h-[30%] rounded-sm opacity-60" />
+                <div className="w-full bg-[#2b2f2e] h-[55%] rounded-sm" />
+              </div>
+            </div>
+
           </section>
 
-          {/* Table & Chart Row */}
-          <section className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            
-            {/* Upcoming Audits Table */}
-            <div className="lg:col-span-3 glass-panel rounded-2xl overflow-hidden card-top-highlight">
-              <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center">
-                <h3 className="text-base font-bold text-on-surface">Upcoming Audits</h3>
-                <Link 
-                  to="/assets"
-                  className="text-primary text-xs tracking-wider font-semibold uppercase hover:underline"
-                  style={{ color: '#b4c5ff', fontFamily: "'Geist', monospace" }}
-                >
-                  View All
-                </Link>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-white/5 bg-white/[0.02]">
-                      <th className="px-6 py-3 text-xs tracking-wider uppercase font-semibold text-on-surface-variant" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>Asset Name</th>
-                      <th className="px-6 py-3 text-xs tracking-wider uppercase font-semibold text-on-surface-variant" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>Location</th>
-                      <th className="px-6 py-3 text-xs tracking-wider uppercase font-semibold text-on-surface-variant" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>Audit Date</th>
-                      <th className="px-6 py-3 text-xs tracking-wider uppercase font-semibold text-on-surface-variant" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {filteredAudits.length === 0 ? (
-                      <tr>
-                        <td colSpan="4" className="px-6 py-10 text-center text-xs text-on-surface-variant">
-                          No matching audits found.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredAudits.map((item, index) => (
-                        <tr 
-                          key={index} 
-                          className="hover:bg-white/[0.02] transition-colors cursor-pointer"
-                          onClick={() => navigate('/assets/AF-9088-QX')}
-                        >
-                          <td className="px-6 py-3.5 text-sm font-semibold text-on-surface">{item.name}</td>
-                          <td className="px-6 py-3.5 text-sm text-on-surface-variant" style={{ color: '#c3c6d7' }}>{item.location}</td>
-                          <td className="px-6 py-3.5 text-sm text-on-surface">{item.date}</td>
-                          <td className="px-6 py-3.5">
-                            <span 
-                              className={`px-3 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
-                                item.status === 'Critical' 
-                                  ? 'bg-red-500/10 text-red-400 border-red-500/20' 
-                                  : item.status === 'Imminent'
-                                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                  : 'bg-white/5 text-on-surface-variant border-white/10'
-                              }`}
-                            >
-                              {item.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Allocation Trend mock chart */}
-            <div className="lg:col-span-2 glass-panel rounded-2xl p-6 card-top-highlight flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-base font-bold text-on-surface">Allocation Trends</h3>
-                <div className="flex gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#b4c5ff' }} />
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#bec6e0' }} />
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#b9c7e0' }} />
+          {/* Secondary stats row */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { val: '9', label: 'Active Bookings', icon: 'calendar_today', color: 'text-[#00352d]', bg: 'bg-[#b3eee0]/40' },
+              { val: '3', label: 'Pending Transfers', icon: 'sync_alt', color: 'text-[#59605f]', bg: 'bg-[#dbe1e0]/40' },
+              { val: '12', label: 'Upcoming Returns', icon: 'assignment_return', color: 'text-[#ba1a1a]', bg: 'bg-[#ffdad6]/40' },
+            ].map(sec => (
+              <div key={sec.label} className="bg-[#f4f4f1]/50 p-4.5 rounded-2xl flex items-center gap-4 border border-[#bfc9c5]/30">
+                <div className={`w-11 h-11 rounded-full ${sec.bg} flex items-center justify-center shadow-xs flex-shrink-0`}>
+                  <span className={`material-symbols-outlined ${sec.color} text-base`}>{sec.icon}</span>
                 </div>
+                <div>
+                  <h4 className="text-lg font-black text-[#1a1c1b] leading-tight">{sec.val}</h4>
+                  <p className="text-[10px] text-[#404946] font-bold mt-0.5">{sec.label}</p>
+                </div>
+              </div>
+            ))}
+          </section>
+
+          {/* Urgent Overdue Alert Banner */}
+          {overdueVisible && (
+            <div className="bg-[#ffdad6] border border-[#ba1a1a]/20 p-4.5 rounded-2xl flex items-center justify-between gap-4 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#ba1a1a] text-lg font-bold">warning</span>
+                <span className="text-xs font-bold text-[#93000a] leading-normal">
+                  3 assets overdue for return - flagged for automated follow-up.
+                </span>
               </div>
               
-              <div className="flex-grow min-h-[200px] relative mt-4">
-                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 px-2">
-                  <div className="w-full bg-primary/20 rounded-t-lg h-[40%]" style={{ backgroundColor: 'rgba(180,197,255,0.2)', boxShadow: '0 -4px 12px rgba(180, 197, 255, 0.1)' }} />
-                  <div className="w-full bg-primary/40 rounded-t-lg h-[65%]" style={{ backgroundColor: 'rgba(180,197,255,0.4)', boxShadow: '0 -4px 12px rgba(180, 197, 255, 0.2)' }} />
-                  <div className="w-full bg-primary/20 rounded-t-lg h-[45%]" style={{ backgroundColor: 'rgba(180,197,255,0.2)', boxShadow: '0 -4px 12px rgba(180, 197, 255, 0.1)' }} />
-                  <div className="w-full bg-primary/60 rounded-t-lg h-[85%]" style={{ backgroundColor: 'rgba(180,197,255,0.6)', boxShadow: '0 -4px 12px rgba(180, 197, 255, 0.3)' }} />
-                  <div className="w-full bg-primary/40 rounded-t-lg h-[55%]" style={{ backgroundColor: 'rgba(180,197,255,0.4)', boxShadow: '0 -4px 12px rgba(180, 197, 255, 0.2)' }} />
-                  <div className="w-full bg-primary/80 rounded-t-lg h-[95%]" style={{ backgroundColor: 'rgba(180,197,255,0.8)', boxShadow: '0 -4px 12px rgba(180, 197, 255, 0.4)' }} />
-                </div>
-                <div className="absolute inset-0 border-b border-l border-white/10" />
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => navigate('/assets')}
+                  className="text-[10px] font-extrabold text-[#ba1a1a] hover:underline flex items-center gap-0.5 uppercase tracking-wider"
+                >
+                  View Assets
+                  <span className="material-symbols-outlined text-xs">chevron_right</span>
+                </button>
+                <button 
+                  onClick={() => setOverdueVisible(false)} 
+                  className="text-[#93000a]/50 hover:text-[#93000a] p-0.5"
+                >
+                  <span className="material-symbols-outlined text-sm font-bold">close</span>
+                </button>
               </div>
+            </div>
+          )}
 
-              <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-white/5">
-                <div className="text-center">
-                  <div className="text-[10px] font-bold text-on-surface-variant tracking-wider" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>EQUITIES</div>
-                  <div className="text-base font-bold text-on-surface mt-1">42%</div>
+          {/* Primary Quick Actions Area */}
+          <section className="flex flex-wrap gap-4 py-2">
+            <button 
+              onClick={() => navigate('/assets')}
+              className="bg-[#00352d] hover:bg-[#0d4d43] text-white px-8 py-3.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-98 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">add_circle</span>
+              Register Asset
+            </button>
+            <button 
+              onClick={() => navigate('/booking')}
+              className="bg-white border border-[#bfc9c5] hover:bg-[#f4f4f1] text-[#1a1c1b] px-8 py-3.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-98 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">book_online</span>
+              Book Resource
+            </button>
+            <button 
+              onClick={() => navigate('/allocation')}
+              className="bg-white border border-[#bfc9c5] hover:bg-[#f4f4f1] text-[#1a1c1b] px-8 py-3.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-98 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">campaign</span>
+              Raise Request
+            </button>
+          </section>
+
+          {/* Bottom Recent Activity Ledger */}
+          <section className="bg-white border border-[#bfc9c5]/50 rounded-2xl overflow-hidden shadow-xs">
+            <div className="px-6 py-4.5 bg-[#f4f4f1]/50 border-b border-[#bfc9c5]/40 flex justify-between items-center">
+              <h3 className="text-sm font-black text-slate-800">Recent Activity</h3>
+              <button 
+                onClick={() => toast.success('Displaying comprehensive audit logs.')}
+                className="text-[10px] font-bold text-[#00352d] hover:underline uppercase tracking-wider"
+              >
+                View History
+              </button>
+            </div>
+            
+            <div className="divide-y divide-[#bfc9c5]/30 px-6">
+              {activities.map((act) => (
+                <div key={act.id} className="py-5 hover:bg-slate-50/50 transition-colors group">
+                  <div className="flex gap-4 items-start">
+                    <div className={`w-9 h-9 rounded-full ${act.bg} flex items-center justify-center shrink-0 border border-current/10`}>
+                      <span className="material-symbols-outlined text-base">
+                        {act.id === 1 ? 'laptop_mac' : act.id === 2 ? 'meeting_room' : 'build'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center gap-4">
+                        <h4 className="text-xs font-bold text-slate-800 truncate">{act.title}</h4>
+                        <span className="text-[10px] text-slate-400 font-semibold flex-shrink-0">{act.time}</span>
+                      </div>
+                      <p className="text-[11px] text-[#404946] font-semibold mt-1">{act.desc}</p>
+                      
+                      <div className="flex gap-1.5 mt-2.5">
+                        <span className="px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-500 text-[8px] font-bold rounded">
+                          {act.tag1}
+                        </span>
+                        <span className="px-2 py-0.5 bg-[#b3eee0]/40 border border-[#b3eee0]/60 text-[#00201b] text-[8px] font-bold rounded">
+                          {act.tag2}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-[10px] font-bold text-on-surface-variant tracking-wider" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>CRYPTO</div>
-                  <div className="text-base font-bold text-on-surface mt-1">28%</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-[10px] font-bold text-on-surface-variant tracking-wider" style={{ fontFamily: "'Geist', monospace", color: '#c3c6d7' }}>REALTY</div>
-                  <div className="text-base font-bold text-on-surface mt-1">30%</div>
-                </div>
-              </div>
+              ))}
             </div>
           </section>
+
         </div>
-
-        {/* Floating Quick Action FAB */}
-        <button 
-          onClick={() => toast.success('Quick action trigger: Adding new inventory tag…')}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary-fixed rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50 md:mb-0 mb-20 group cursor-pointer"
-          style={{ backgroundColor: '#b4c5ff', color: '#00174b' }}
-        >
-          <span className="material-symbols-outlined text-[28px] group-hover:rotate-90 transition-transform duration-300">add</span>
-        </button>
-
-        {/* Assistant Floating Chat bar */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 z-50 md:left-[calc(50%+140px)] mb-20 md:mb-0">
-          <form 
-            onSubmit={handleAssistantSend}
-            className="glass-panel-heavy rounded-2xl p-2 flex items-center gap-3 border border-primary/20 shadow-2xl"
-            style={{ borderColor: 'rgba(180,197,255,0.2)' }}
-          >
-            <div 
-              className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg flex-shrink-0"
-              style={{ backgroundColor: '#b4c5ff', color: '#00174b' }}
-            >
-              <span className="material-symbols-outlined text-lg">smart_toy</span>
-            </div>
-            <input 
-              className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-xs text-on-surface px-1 placeholder:text-on-surface-variant/40" 
-              placeholder="Ask Assistant about portfolio risks..." 
-              type="text"
-              value={assistantText}
-              onChange={e => setAssistantText(e.target.value)}
-            />
-            <button 
-              type="submit"
-              className="material-symbols-outlined text-primary hover:text-white p-2 cursor-pointer transition-colors"
-              style={{ color: '#b4c5ff' }}
-            >
-              send
-            </button>
-          </form>
-        </div>
-
-        {/* Mobile Navigation Bar */}
-        <nav 
-          className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface/80 backdrop-blur-2xl border-t border-white/10"
-          style={{ backgroundColor: 'rgba(17,19,27,0.8)' }}
-        >
-          <Link 
-            to="/"
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-colors text-primary bg-primary/10"
-            style={{ color: '#b4c5ff' }}
-          >
-            <span className="material-symbols-outlined text-xl">dashboard</span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: "'Geist', monospace" }}>Dashboard</span>
-          </Link>
-          
-          <Link 
-            to="/assets"
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-colors text-on-surface-variant hover:text-primary"
-          >
-            <span className="material-symbols-outlined text-xl">account_balance_wallet</span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: "'Geist', monospace" }}>Assets</span>
-          </Link>
-          
-          <Link 
-            to="/booking"
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-colors text-on-surface-variant hover:text-primary"
-          >
-            <span className="material-symbols-outlined text-xl">calendar_month</span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: "'Geist', monospace" }}>Scan</span>
-          </Link>
-
-          <Link 
-            to="/assistant"
-            className="flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-colors text-on-surface-variant hover:text-primary"
-          >
-            <span className="material-symbols-outlined text-xl">smart_toy</span>
-            <span className="text-[10px] font-semibold" style={{ fontFamily: "'Geist', monospace" }}>Assistant</span>
-          </Link>
-        </nav>
       </main>
     </div>
   );
