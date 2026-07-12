@@ -2,14 +2,11 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-// Layouts
-import AuthLayout from './layouts/AuthLayout';
-
 // Auth Pages
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
 
-// Dashboard & AI Pages
+// App Pages
 import Dashboard from './pages/Dashboard/Dashboard';
 import Assistant from './pages/Assistant/Assistant';
 import AssetList from './pages/Assets/AssetList';
@@ -18,11 +15,18 @@ import Departments from './pages/Organization/Departments';
 import Sustainability from './pages/Sustainability/Sustainability';
 import Maintenance from './pages/Maintenance/Maintenance';
 import Booking from './pages/Booking/Booking';
+import Audit from './pages/Audit/Audit';
+import Allocation from './pages/Allocation/Allocation';
+import Reports from './pages/Reports/Reports';
+import Notifications from './pages/Notifications/Notifications';
+
+// Layouts
+import AuthLayout from './layouts/AuthLayout';
 
 export default function App() {
   return (
     <Router>
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           style: {
@@ -41,27 +45,39 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
         </Route>
 
-        {/* Command Center Dashboard */}
+        {/* Dashboard */}
         <Route path="/" element={<Dashboard />} />
 
-        {/* Assets Overview */}
+        {/* Assets */}
         <Route path="/assets" element={<AssetList />} />
         <Route path="/assets/:id" element={<AssetDetail />} />
 
-        {/* AI Assistant Feed */}
-        <Route path="/assistant" element={<Assistant />} />
-
-        {/* Organization Directory */}
+        {/* Organization */}
         <Route path="/organization/departments" element={<Departments />} />
 
-        {/* Maintenance Center */}
+        {/* Allocation & Transfer */}
+        <Route path="/allocation" element={<Allocation />} />
+
+        {/* Resource Booking */}
+        <Route path="/booking" element={<Booking />} />
+
+        {/* Maintenance */}
         <Route path="/maintenance" element={<Maintenance />} />
 
-        {/* Sustainability Dashboard */}
+        {/* Sustainability */}
         <Route path="/sustainability" element={<Sustainability />} />
 
-        {/* Booking & Reservations */}
-        <Route path="/booking" element={<Booking />} />
+        {/* Audit & Compliance */}
+        <Route path="/audit" element={<Audit />} />
+
+        {/* Reports */}
+        <Route path="/reports" element={<Reports />} />
+
+        {/* Notifications */}
+        <Route path="/notifications" element={<Notifications />} />
+
+        {/* AI Assistant */}
+        <Route path="/assistant" element={<Assistant />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
