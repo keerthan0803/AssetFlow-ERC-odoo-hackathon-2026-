@@ -42,6 +42,7 @@ public class Asset {
     @Column(name = "purchase_cost")
     private BigDecimal purchaseCost;
 
+    @Column(name = "asset_condition")
     private String condition;
 
     @Enumerated(EnumType.STRING)
