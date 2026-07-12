@@ -151,12 +151,8 @@ export default function Header({ title, showSearch = true, searchQuery = "", set
         
         <div 
           onClick={() => navigate('/profile')}
-          className="flex items-center gap-3 cursor-pointer group"
+          className="cursor-pointer group"
         >
-          <div className="text-right hidden sm:block">
-            <p className="text-xs text-slate-800 font-bold leading-none">{userName}</p>
-            <p className="text-[9px] text-[#404946] leading-none mt-1">{userRole.replace('_', ' ')}</p>
-          </div>
           <div className="w-8 h-8 rounded-full bg-[#00352d] text-white flex items-center justify-center font-bold text-xs border border-[#bfc9c5]/35">
             {userName[0]?.toUpperCase() || 'U'}
           </div>
