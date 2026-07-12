@@ -1,4 +1,4 @@
-package com.assetflow.backend.enums;
+package com.enums;
 
 public enum AuditStatus {
     SCHEDULED,

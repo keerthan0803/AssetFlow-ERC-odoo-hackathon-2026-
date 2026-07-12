@@ -1,4 +1,4 @@
-package com.assetflow.backend.entity;
+package com.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,23 +8,31 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "departments")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Role {
+public class Department {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "role_id")
+    @Column(name = "department_id")
     private Long id;
 
-    @Column(name = "role_name", nullable = false, unique = true)
-    private String roleName;
+    @Column(name = "department_name", nullable = false)
+    private String departmentName;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_department_id")
+    private Department parentDepartment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_head_id")
+    private Employee departmentHead;
+
+    @Column(nullable = false)
+    private Boolean status = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

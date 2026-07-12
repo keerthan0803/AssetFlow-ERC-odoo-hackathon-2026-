@@ -1,49 +1,49 @@
-package com.assetflow.backend.entity;
+package com.entity;
 
-import com.assetflow.backend.enums.BookingStatus;
+import com.enums.AuditStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "resource_bookings")
+@Table(name = "audit_cycles")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ResourceBooking {
+public class AuditCycle {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "booking_id")
+    @Column(name = "audit_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "resource_id", nullable = false)
-    private Resource resource;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id", nullable = false)
-    private Employee employee;
+    @Column(name = "audit_name", nullable = false)
+    private String auditName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
 
-    private String purpose;
+    private String location;
 
-    @Column(name = "start_datetime", nullable = false)
-    private LocalDateTime startDatetime;
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
 
-    @Column(name = "end_datetime", nullable = false)
-    private LocalDateTime endDatetime;
+    @Column(name = "end_date")
+    private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private BookingStatus status;
+    private AuditStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_employee_id")
+    private Employee createdBy;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
