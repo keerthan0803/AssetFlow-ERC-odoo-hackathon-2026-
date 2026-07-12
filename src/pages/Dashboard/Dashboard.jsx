@@ -3,132 +3,272 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Sidebar from '../../components/Sidebar';
 
-const STATS = [
-  { label: 'Available', value: 128, icon: 'check_circle', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
-  { label: 'Allocated', value: 76,  icon: 'person',       color: '#3b5bdb', bg: '#eff2ff', border: '#c5d0fc' },
-  { label: 'Available Rooms', value: 4, icon: 'meeting_room', color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-  { label: 'Active Bookings', value: 9, icon: 'event_available', color: '#0891b2', bg: '#ecfeff', border: '#a5f3fc' },
-  { label: 'Pending Transfers', value: 3, icon: 'swap_horiz', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
-  { label: 'Upcoming Returns', value: 12, icon: 'assignment_return', color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
-];
-
-const ACTIVITIES = [
-  { icon: 'laptop',         color: '#3b5bdb', text: 'Laptop AF-0114 — allocated to Priya Shah — IT Dept',  time: '9:41 AM' },
-  { icon: 'meeting_room',   color: '#7c3aed', text: 'Room B2 — booking confirmed — 2:00 to 3:00 PM',       time: '9:28 AM' },
-  { icon: 'display_settings', color: '#0891b2', text: 'Projector AF-0062 — maintenance resolved',           time: '8:55 AM' },
-  { icon: 'swap_horiz',     color: '#d97706', text: 'Monitor AF-0088 — transfer request from Rohan Mehta',  time: '8:30 AM' },
-  { icon: 'inventory_2',    color: '#16a34a', text: 'iPad AF-0199 — returned to warehouse by Sana Iqbal',  time: '8:10 AM' },
-];
-
-const QUICK_ACTIONS = [
-  { label: '+ Register Asset',  color: '#3b5bdb', bg: '#3b5bdb', text: '#fff',    icon: 'add_circle', path: '/assets' },
-  { label: 'Book Resource',     color: '#7c3aed', bg: '#f5f3ff', text: '#7c3aed', icon: 'event_available', path: '/booking' },
-  { label: 'Raise Request',     color: '#d97706', bg: '#fffbeb', text: '#d97706', icon: 'warning', path: '/allocation' },
-];
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const [overdueVisible, setOverdueVisible] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/assets?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const user = localStorage.getItem('af_logged_in_user') || 'Admin';
+
+  const activities = [
+    { id: 1, title: 'Laptop AF-0114 allocated to Priya Shah', desc: 'Dept: IT Development | Serial: MAC-49201-B', time: '14 mins ago', tag1: 'Asset Transfer', tag2: 'Hardware', bg: 'bg-[#b3eee0]/40 text-[#00201b]' },
+    { id: 2, title: 'Room B2 booking confirmed', desc: 'Time: 2:00 PM to 3:00 PM | Purpose: Quarterly Review', time: '42 mins ago', tag1: 'Space Mgmt', tag2: 'Reserved', bg: 'bg-slate-100 text-slate-700' },
+    { id: 3, title: 'Projector AF-0062 maintenance resolved', desc: 'Status: Field Test Passed | Action: Bulb Replacement', time: '2 hours ago', tag1: 'Maintenance', tag2: 'Completed', bg: 'bg-emerald-50 text-emerald-800' }
+  ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8f9fc', fontFamily: "'Inter', sans-serif" }}>
-      <style>{`
-        .stat-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; transition: box-shadow 0.15s, transform 0.15s; cursor: default; }
-        .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
-        .activity-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
-        .activity-row:last-child { border-bottom: none; }
-        .quick-btn { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 9px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: all 0.12s; }
-        .quick-btn:hover { filter: brightness(0.93); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-      `}</style>
-
+    <div className="flex min-h-screen bg-[#F9F9F7] font-sans antialiased text-[#1a1c1b]">
       <Sidebar />
 
-      <main style={{ flex: 1, overflowY: 'auto' }}>
-        {/* Top header */}
-        <header style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 40 }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#111827', letterSpacing: '-0.3px' }}>Dashboard</div>
-            <div style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>Good morning · {new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' })}</div>
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        
+        {/* TopNavBar */}
+        <header className="sticky top-0 z-40 flex justify-between items-center w-full px-8 py-3 bg-[#F9F9F7] border-b border-[#bfc9c5]/40 shadow-xs">
+          <div className="flex items-center gap-8 flex-1">
+            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-md">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#404946] opacity-60 text-base">search</span>
+              <input 
+                type="text"
+                placeholder="Search assets, rooms, or requests..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-[#f4f4f1] border-none rounded-full py-2.5 pl-12 pr-4 text-xs focus:ring-2 focus:ring-[#00352d] outline-none transition-all placeholder:text-[#404946]/50 text-[#1a1c1b]" 
+              />
+            </form>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ position: 'relative' }}>
-              <span className="material-symbols-outlined" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 16 }}>search</span>
-              <input placeholder="Search assets..." style={{ paddingLeft: 34, paddingRight: 14, paddingTop: 8, paddingBottom: 8, borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13, color: '#374151', backgroundColor: '#f9fafb', outline: 'none', width: 220 }} />
-            </div>
-            <button onClick={() => navigate('/notifications')} style={{ width: 36, height: 36, borderRadius: 8, border: '1px solid #e5e7eb', backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#374151' }}>notifications</span>
-              <span style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', backgroundColor: '#ef4444', border: '2px solid #fff' }} />
+          
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/notifications')}
+              className="material-symbols-outlined p-2 rounded-full text-[#404946] hover:bg-[#f4f4f1] transition-colors text-lg relative"
+            >
+              notifications
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-red-500" />
             </button>
-            <div style={{ width: 34, height: 34, borderRadius: 8, background: 'linear-gradient(135deg, #3b5bdb, #845ef7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>A</span>
+            <button 
+              onClick={() => toast.success('Settings console initialized.')}
+              className="material-symbols-outlined p-2 rounded-full text-[#404946] hover:bg-[#f4f4f1] transition-colors text-lg"
+            >
+              settings
+            </button>
+            <div className="h-6 w-px bg-[#bfc9c5]/60 mx-1" />
+            <div className="flex items-center gap-2 cursor-pointer hover:bg-[#f4f4f1] p-1 rounded-full transition-colors">
+              <div className="w-9 h-9 rounded-full border-2 border-[#b3eee0] overflow-hidden">
+                <img 
+                  className="w-full h-full object-cover" 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx-aYNuMHnK-OfIRzsZuFBSJRg5e9N244KJYHnPEhhFoLYjidnDaZ87qek-mhoxf_IGua8aOwmmOQFDXxnKo1cxJOiONNTrCrQMTfdoz8kdcHzWBP2_KQ21XDeuMpxl-5NdYrMYoLJY6yppeFYjiIMl62Wlq1clNnPN57H82EN5aqIZ49xjqVz1NfSAggWthedpN-rcjblR-zB0AF9znhFp_PPePCI9NoXNQ5nZGIGT93odfCpPRUA"
+                  alt="Profile Avatar"
+                />
+              </div>
             </div>
           </div>
         </header>
 
-        <div style={{ padding: '24px 28px', maxWidth: 1200 }}>
+        {/* Main Canvas Area */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-6 text-left pb-20">
+          
+          {/* Welcome Header */}
+          <section>
+            <h2 className="text-2xl font-black text-[#1a1c1b] tracking-tight">Today's Overview</h2>
+            <p className="text-xs text-[#404946]/70 font-semibold mt-1">Real-time status of your enterprise inventory.</p>
+          </section>
 
-          {/* Section heading */}
-          <div style={{ marginBottom: 16 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', marginBottom: 2 }}>Today's Overview</h2>
-            <p style={{ fontSize: 12, color: '#9ca3af' }}>Live snapshot of all enterprise assets and bookings</p>
-          </div>
-
-          {/* Stats grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 20 }}>
-            {STATS.map(s => (
-              <div key={s.label} className="stat-card">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: s.bg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: s.color, fontVariationSettings: "'FILL' 1" }}>{s.icon}</span>
-                  </div>
+          {/* Bento Grid: 3 KPI Cards */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Card 1: Available */}
+            <div className="bg-white border border-[#bfc9c5]/50 p-6 rounded-2xl shadow-xs hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 bg-[#0d4d43] rounded-xl flex-shrink-0">
+                  <span className="material-symbols-outlined text-[#83bdb0] text-lg">inventory</span>
                 </div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: '#111827', lineHeight: 1 }}>{s.value}</div>
+                <span className="text-[9px] font-extrabold text-[#00201b] bg-[#b3eee0] px-2 py-0.5 rounded-full border border-[#00201b]/10 uppercase">
+                  +12% vs LY
+                </span>
+              </div>
+              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">128</div>
+              <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Available Assets</div>
+              
+              {/* Vertical columns sparkline */}
+              <div className="mt-5 h-10 w-full flex items-end gap-1 px-1">
+                <div className="w-full bg-[#0d4d43] h-[40%] rounded-sm opacity-20" />
+                <div className="w-full bg-[#0d4d43] h-[60%] rounded-sm opacity-35" />
+                <div className="w-full bg-[#0d4d43] h-[50%] rounded-sm opacity-45" />
+                <div className="w-full bg-[#0d4d43] h-[75%] rounded-sm opacity-60" />
+                <div className="w-full bg-[#0d4d43] h-full rounded-sm" />
+              </div>
+            </div>
+
+            {/* Card 2: Allocated */}
+            <div className="bg-white border border-[#bfc9c5]/50 p-6 rounded-2xl shadow-xs hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 bg-[#dbe1e0] rounded-xl flex-shrink-0">
+                  <span className="material-symbols-outlined text-[#5d6463] text-lg">person_pin_circle</span>
+                </div>
+                <span className="text-[9px] font-extrabold text-[#171d1c] bg-[#dee4e3] px-2 py-0.5 rounded-full border border-[#171d1c]/10 uppercase">
+                  Stable
+                </span>
+              </div>
+              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">76</div>
+              <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Allocated Assets</div>
+              
+              {/* Vertical columns sparkline */}
+              <div className="mt-5 h-10 w-full flex items-end gap-1 px-1">
+                <div className="w-full bg-[#59605f] h-[30%] rounded-sm opacity-20" />
+                <div className="w-full bg-[#59605f] h-[55%] rounded-sm opacity-35" />
+                <div className="w-full bg-[#59605f] h-[45%] rounded-sm opacity-45" />
+                <div className="w-full bg-[#59605f] h-[65%] rounded-sm opacity-60" />
+                <div className="w-full bg-[#59605f] h-[85%] rounded-sm" />
+              </div>
+            </div>
+
+            {/* Card 3: Rooms */}
+            <div className="bg-white border border-[#bfc9c5]/50 p-6 rounded-2xl shadow-xs hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 bg-[#2b2f2e]/10 rounded-xl flex-shrink-0">
+                  <span className="material-symbols-outlined text-[#2b2f2e] text-lg">meeting_room</span>
+                </div>
+                <span className="text-[9px] font-extrabold text-[#93000a] bg-[#ffdad6] px-2 py-0.5 rounded-full border border-[#93000a]/10 uppercase">
+                  -2 from AM
+                </span>
+              </div>
+              <div className="text-3xl font-black text-[#1a1c1b] tracking-tight leading-none mb-1">4</div>
+              <div className="text-[10px] font-bold text-[#404946] uppercase tracking-wider">Available Rooms</div>
+              
+              {/* Vertical columns sparkline */}
+              <div className="mt-5 h-10 w-full flex items-end gap-1 px-1">
+                <div className="w-full bg-[#2b2f2e] h-[85%] rounded-sm opacity-20" />
+                <div className="w-full bg-[#2b2f2e] h-[65%] rounded-sm opacity-35" />
+                <div className="w-full bg-[#2b2f2e] h-[50%] rounded-sm opacity-45" />
+                <div className="w-full bg-[#2b2f2e] h-[30%] rounded-sm opacity-60" />
+                <div className="w-full bg-[#2b2f2e] h-[55%] rounded-sm" />
+              </div>
+            </div>
+
+          </section>
+
+          {/* Secondary stats row */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { val: '9', label: 'Active Bookings', icon: 'calendar_today', color: 'text-[#00352d]', bg: 'bg-[#b3eee0]/40' },
+              { val: '3', label: 'Pending Transfers', icon: 'sync_alt', color: 'text-[#59605f]', bg: 'bg-[#dbe1e0]/40' },
+              { val: '12', label: 'Upcoming Returns', icon: 'assignment_return', color: 'text-[#ba1a1a]', bg: 'bg-[#ffdad6]/40' },
+            ].map(sec => (
+              <div key={sec.label} className="bg-[#f4f4f1]/50 p-4.5 rounded-2xl flex items-center gap-4 border border-[#bfc9c5]/30">
+                <div className={`w-11 h-11 rounded-full ${sec.bg} flex items-center justify-center shadow-xs flex-shrink-0`}>
+                  <span className={`material-symbols-outlined ${sec.color} text-base`}>{sec.icon}</span>
+                </div>
+                <div>
+                  <h4 className="text-lg font-black text-[#1a1c1b] leading-tight">{sec.val}</h4>
+                  <p className="text-[10px] text-[#404946] font-bold mt-0.5">{sec.label}</p>
+                </div>
               </div>
             ))}
-          </div>
+          </section>
 
-          {/* Overdue alert */}
+          {/* Urgent Overdue Alert Banner */}
           {overdueVisible && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 10, backgroundColor: '#fef2f2', border: '1px solid #fecaca', marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#ef4444', fontVariationSettings: "'FILL' 1" }}>warning</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#dc2626' }}>3 assets overdue for return — flagged for follow-up</span>
+            <div className="bg-[#ffdad6] border border-[#ba1a1a]/20 p-4.5 rounded-2xl flex items-center justify-between gap-4 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#ba1a1a] text-lg font-bold">warning</span>
+                <span className="text-xs font-bold text-[#93000a] leading-normal">
+                  3 assets overdue for return - flagged for automated follow-up.
+                </span>
               </div>
-              <button onClick={() => setOverdueVisible(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 4 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
-              </button>
+              
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => navigate('/assets')}
+                  className="text-[10px] font-extrabold text-[#ba1a1a] hover:underline flex items-center gap-0.5 uppercase tracking-wider"
+                >
+                  View Assets
+                  <span className="material-symbols-outlined text-xs">chevron_right</span>
+                </button>
+                <button 
+                  onClick={() => setOverdueVisible(false)} 
+                  className="text-[#93000a]/50 hover:text-[#93000a] p-0.5"
+                >
+                  <span className="material-symbols-outlined text-sm font-bold">close</span>
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Quick actions */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 28 }}>
-            {QUICK_ACTIONS.map(a => (
-              <button key={a.label} className="quick-btn" onClick={() => navigate(a.path)} style={{ backgroundColor: a.bg, color: a.text }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>{a.icon}</span>
-                {a.label}
-              </button>
-            ))}
-          </div>
+          {/* Primary Quick Actions Area */}
+          <section className="flex flex-wrap gap-4 py-2">
+            <button 
+              onClick={() => navigate('/assets')}
+              className="bg-[#00352d] hover:bg-[#0d4d43] text-white px-8 py-3.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-98 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">add_circle</span>
+              Register Asset
+            </button>
+            <button 
+              onClick={() => navigate('/booking')}
+              className="bg-white border border-[#bfc9c5] hover:bg-[#f4f4f1] text-[#1a1c1b] px-8 py-3.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-98 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">book_online</span>
+              Book Resource
+            </button>
+            <button 
+              onClick={() => navigate('/allocation')}
+              className="bg-white border border-[#bfc9c5] hover:bg-[#f4f4f1] text-[#1a1c1b] px-8 py-3.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-xs transition-all active:scale-98 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">campaign</span>
+              Raise Request
+            </button>
+          </section>
 
-          {/* Recent Activity */}
-          <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>Recent Activity</div>
-              <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, backgroundColor: '#f3f4f6', padding: '3px 10px', borderRadius: 99 }}>Today</span>
+          {/* Bottom Recent Activity Ledger */}
+          <section className="bg-white border border-[#bfc9c5]/50 rounded-2xl overflow-hidden shadow-xs">
+            <div className="px-6 py-4.5 bg-[#f4f4f1]/50 border-b border-[#bfc9c5]/40 flex justify-between items-center">
+              <h3 className="text-sm font-black text-slate-800">Recent Activity</h3>
+              <button 
+                onClick={() => toast.success('Displaying comprehensive audit logs.')}
+                className="text-[10px] font-bold text-[#00352d] hover:underline uppercase tracking-wider"
+              >
+                View History
+              </button>
             </div>
-            <div style={{ padding: '4px 20px 8px' }}>
-              {ACTIVITIES.map((a, i) => (
-                <div key={i} className="activity-row">
-                  <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: a.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: a.color, fontVariationSettings: "'FILL' 1" }}>{a.icon}</span>
+            
+            <div className="divide-y divide-[#bfc9c5]/30 px-6">
+              {activities.map((act) => (
+                <div key={act.id} className="py-5 hover:bg-slate-50/50 transition-colors group">
+                  <div className="flex gap-4 items-start">
+                    <div className={`w-9 h-9 rounded-full ${act.bg} flex items-center justify-center shrink-0 border border-current/10`}>
+                      <span className="material-symbols-outlined text-base">
+                        {act.id === 1 ? 'laptop_mac' : act.id === 2 ? 'meeting_room' : 'build'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center gap-4">
+                        <h4 className="text-xs font-bold text-slate-800 truncate">{act.title}</h4>
+                        <span className="text-[10px] text-slate-400 font-semibold flex-shrink-0">{act.time}</span>
+                      </div>
+                      <p className="text-[11px] text-[#404946] font-semibold mt-1">{act.desc}</p>
+                      
+                      <div className="flex gap-1.5 mt-2.5">
+                        <span className="px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-500 text-[8px] font-bold rounded">
+                          {act.tag1}
+                        </span>
+                        <span className="px-2 py-0.5 bg-[#b3eee0]/40 border border-[#b3eee0]/60 text-[#00201b] text-[8px] font-bold rounded">
+                          {act.tag2}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <span style={{ flex: 1, fontSize: 13, color: '#374151', fontWeight: 500 }}>{a.text}</span>
-                  <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, flexShrink: 0 }}>{a.time}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
         </div>
       </main>
